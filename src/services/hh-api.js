@@ -47,7 +47,13 @@ class HHApi {
         queryParams.append('area', params.area);
       }
     }
-    if (params.schedule) queryParams.append('schedule', params.schedule);
+    if (params.schedule) {
+      if (Array.isArray(params.schedule)) {
+        params.schedule.forEach(s => queryParams.append('schedule', s));
+      } else {
+        queryParams.append('schedule', params.schedule);
+      }
+    }
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
     if (params.salary_to) queryParams.append('salary_to', params.salary_to);
@@ -70,7 +76,13 @@ class HHApi {
         queryParams.append('area', params.area);
       }
     }
-    if (params.schedule) queryParams.append('schedule', params.schedule);
+    if (params.schedule) {
+      if (Array.isArray(params.schedule)) {
+        params.schedule.forEach(s => queryParams.append('schedule', s));
+      } else {
+        queryParams.append('schedule', params.schedule);
+      }
+    }
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
     if (params.salary_to) queryParams.append('salary_to', params.salary_to);

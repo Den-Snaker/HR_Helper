@@ -6,7 +6,11 @@ let totalPages = 0;
 let currentItems = [];
 let isAuthenticated = false;
 let selectedAreas = [];
+let selectedRoles = [];
+let selectedSchedules = [];
 let areasDropdownOpen = false;
+let rolesDropdownOpen = false;
+let schedulesDropdownOpen = false;
 
 const dictionaries = {
   schedules: [],
@@ -38,12 +42,19 @@ const popularAreas = [
   { id: '104', name: 'Пермь' },
   { id: '73', name: 'Омск' },
   { id: '43', name: 'Тюмень' },
+  { id: '1601', name: 'Тверь' },
   { id: '1662', name: 'Тверская область' },
+  { id: '1673', name: 'Ярославль' },
   { id: '1672', name: 'Ярославская область' },
+  { id: '1677', name: 'Владимир' },
   { id: '1679', name: 'Владимирская область' },
+  { id: '1689', name: 'Рязань' },
   { id: '1691', name: 'Рязанская область' },
+  { id: '1696', name: 'Тула' },
   { id: '1698', name: 'Тульская область' },
+  { id: '1684', name: 'Калуга' },
   { id: '1686', name: 'Калужская область' },
+  { id: '1652', name: 'Смоленск' },
   { id: '1654', name: 'Смоленская область' },
   { id: '99', name: 'Другие регионы' }
 ];
@@ -55,7 +66,7 @@ const areaPresets = {
   },
   moscowArea: {
     name: 'Москва, область и соседние регионы',
-    areas: ['1', '2019', '1662', '1672', '1679', '1691', '1698', '1686', '1654']
+    areas: ['1', '2019', '1601', '1662', '1673', '1672', '1677', '1679', '1689', '1691', '1696', '1698', '1684', '1686', '1652', '1654']
   }
 };
 
@@ -216,27 +227,220 @@ async function loadDictionaries() {
 }
 
 function populateProfessionalRoles() {
-  const select = document.getElementById('professionalRole');
-  if (!select || !dictionaries.professional_roles) return;
+  const roleList = document.getElementById('roleList');
+  if (!roleList || !dictionaries.professional_roles) return;
   
-  select.innerHTML = '<option value="">Все профессии</option>';
+  roleList.innerHTML = '';
   
-  const roles = dictionaries.professional_roles.professional_roles || dictionaries.professional_roles || [];
+  let allRoles = [];
   
-  roles.forEach(category => {
-    const optgroup = document.createElement('optgroup');
-    optgroup.label = category.name || category.industry_name || 'Категория';
-    
-    const items = category.roles || category.industry_roles || [category];
-    items.forEach(role => {
-      const opt = document.createElement('option');
-      opt.value = role.id;
-      opt.textContent = role.name;
-      optgroup.appendChild(opt);
+  // API возвращает массив категорий, каждая со вложенным массивом roles
+  const categories = dictionaries.professional_roles;
+  
+  if (Array.isArray(categories)) {
+    categories.forEach(category => {
+      const roles = category.roles || category.industry_roles || [];
+      if (roles.length > 0) {
+        roles.forEach(role => {
+          allRoles.push({
+            id: role.id,
+            name: role.name,
+            category: category.name || category.industry_name || ''
+          });
+        });
+      } else if (category.id && category.name) {
+        // Если роль без категории
+        allRoles.push({
+          id: category.id,
+          name: category.name,
+          category: ''
+        });
+      }
     });
-    
-    select.appendChild(optgroup);
+  }
+  
+  // Сортировка по имени категории, затем по имени роли
+  allRoles.sort((a, b) => {
+    if (a.category !== b.category) {
+      return (a.category || '').localeCompare(b.category || '');
+    }
+    return a.name.localeCompare(b.name);
   });
+  
+  // Создаём элементы
+  allRoles.forEach(role => {
+    const div = document.createElement('div');
+    div.className = 'role-item';
+    div.dataset.id = role.id;
+    div.dataset.name = role.name.toLowerCase();
+    div.dataset.category = role.category.toLowerCase();
+    div.innerHTML = `
+      <input type="checkbox" id="role_${role.id}" value="${role.id}" onchange="updateSelectedRoles()">
+      <label for="role_${role.id}">${role.name}</label>
+      ${role.category ? `<small style="color: var(--text-secondary); margin-left: 4px;">${role.category}</small>` : ''}
+    `;
+    roleList.appendChild(div);
+  });
+  
+  updateRolesHeaderText();
+}
+
+function toggleRolesDropdown() {
+  const dropdown = document.getElementById('roleDropdown');
+  const header = document.getElementById('roleSelectHeader');
+  
+  if (!dropdown || !header) return;
+  
+  rolesDropdownOpen = !rolesDropdownOpen;
+  
+  if (rolesDropdownOpen) {
+    dropdown.classList.add('open');
+    header.classList.add('active');
+  } else {
+    dropdown.classList.remove('open');
+    header.classList.remove('active');
+  }
+}
+
+function filterRoles() {
+  const searchInput = document.getElementById('roleSearch');
+  if (!searchInput) return;
+  
+  const query = searchInput.value.toLowerCase().trim();
+  const items = document.querySelectorAll('.role-item');
+  
+  items.forEach(item => {
+    const name = item.dataset.name || '';
+    const category = item.dataset.category || '';
+    if (query === '' || name.includes(query) || category.includes(query)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
+
+function selectAllRoles() {
+  const checkboxes = document.querySelectorAll('.role-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateSelectedRoles();
+}
+
+function clearAllRoles() {
+  const checkboxes = document.querySelectorAll('.role-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateSelectedRoles();
+}
+
+function updateSelectedRoles() {
+  const checkboxes = document.querySelectorAll('.role-item input[type="checkbox"]:checked');
+  selectedRoles = Array.from(checkboxes).map(cb => ({
+    id: cb.value,
+    name: cb.parentElement.querySelector('label').textContent
+  }));
+  
+  sortRolesBySelected();
+  updateRolesHeaderText();
+}
+
+function sortRolesBySelected() {
+  const roleList = document.getElementById('roleList');
+  if (!roleList) return;
+  
+  const items = Array.from(roleList.querySelectorAll('.role-item'));
+  const selectedIds = selectedRoles.map(r => r.id);
+  
+  items.sort((a, b) => {
+    const aSelected = selectedIds.includes(a.dataset.id);
+    const bSelected = selectedIds.includes(b.dataset.id);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return 0;
+  });
+  
+  items.forEach(item => roleList.appendChild(item));
+}
+
+function updateRolesHeaderText() {
+  const textEl = document.getElementById('roleSelectText');
+  const countEl = document.getElementById('selectedRolesCount');
+  
+  if (!textEl) return;
+  
+  if (selectedRoles.length === 0) {
+    textEl.textContent = 'Все профессии';
+    if (countEl) countEl.textContent = '';
+  } else if (selectedRoles.length === 1) {
+    textEl.textContent = selectedRoles[0].name;
+    if (countEl) countEl.textContent = '';
+  } else {
+    textEl.textContent = 'Выбрано профессий: ' + selectedRoles.length;
+    if (countEl) countEl.textContent = selectedRoles.length;
+  }
+}
+
+function toggleScheduleDropdown() {
+  const dropdown = document.getElementById('scheduleDropdown');
+  const header = document.getElementById('scheduleSelectHeader');
+  
+  if (!dropdown || !header) return;
+  
+  schedulesDropdownOpen = !schedulesDropdownOpen;
+  
+  if (schedulesDropdownOpen) {
+    dropdown.classList.add('open');
+    header.classList.add('active');
+  } else {
+    dropdown.classList.remove('open');
+    header.classList.remove('active');
+  }
+}
+
+function selectAllSchedules() {
+  const checkboxes = document.querySelectorAll('.schedule-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateSelectedSchedules();
+}
+
+function clearAllSchedules() {
+  const checkboxes = document.querySelectorAll('.schedule-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateSelectedSchedules();
+}
+
+function updateSelectedSchedules() {
+  const checkboxes = document.querySelectorAll('.schedule-item input[type="checkbox"]:checked');
+  const scheduleNames = {
+    'remote': 'Удаленная работа',
+    'fullDay': 'Полный день',
+    'shift': 'Сменный график',
+    'flexible': 'Гибкий график'
+  };
+  
+  selectedSchedules = Array.from(checkboxes).map(cb => ({
+    id: cb.value,
+    name: scheduleNames[cb.value] || cb.value
+  }));
+  
+  updateSchedulesHeaderText();
+}
+
+function updateSchedulesHeaderText() {
+  const textEl = document.getElementById('scheduleSelectText');
+  const countEl = document.getElementById('selectedSchedulesCount');
+  
+  if (!textEl) return;
+  
+  if (selectedSchedules.length === 0) {
+    textEl.textContent = 'Любой';
+    if (countEl) countEl.textContent = '';
+  } else if (selectedSchedules.length === 1) {
+    textEl.textContent = selectedSchedules[0].name;
+    if (countEl) countEl.textContent = '';
+  } else {
+    textEl.textContent = 'Выбрано: ' + selectedSchedules.length;
+    if (countEl) countEl.textContent = selectedSchedules.length;
+  }
 }
 
 function populateAreasSelect() {
@@ -376,9 +580,18 @@ function updateAreasHeaderText() {
 }
 
 document.addEventListener('click', function(e) {
-  const container = document.querySelector('.area-select-container');
-  if (container && !container.contains(e.target) && areasDropdownOpen) {
+  const areaContainer = document.querySelector('.area-select-container');
+  const roleContainer = document.querySelector('.role-select-container');
+  const scheduleContainer = document.querySelector('.schedule-select-container');
+  
+  if (areaContainer && !areaContainer.contains(e.target) && areasDropdownOpen) {
     toggleAreaDropdown();
+  }
+  if (roleContainer && !roleContainer.contains(e.target) && rolesDropdownOpen) {
+    toggleRolesDropdown();
+  }
+  if (scheduleContainer && !scheduleContainer.contains(e.target) && schedulesDropdownOpen) {
+    toggleScheduleDropdown();
   }
 });
 
@@ -492,7 +705,6 @@ function getSearchParams() {
   const params = new URLSearchParams();
   
   const keywords = document.getElementById('keywords')?.value?.trim();
-  const schedule = document.getElementById('schedule')?.value;
   const experience = document.getElementById('experience')?.value;
   const salaryFrom = document.getElementById('salaryFrom')?.value;
   const salaryTo = document.getElementById('salaryTo')?.value;
@@ -508,7 +720,13 @@ function getSearchParams() {
     });
   }
   
-  if (schedule) params.append('schedule', schedule);
+  // Multiple schedules support
+  if (selectedSchedules.length > 0) {
+    selectedSchedules.forEach(schedule => {
+      params.append('schedule', schedule.id);
+    });
+  }
+  
   if (experience) params.append('experience', experience);
   if (salaryFrom) params.append('salary_from', salaryFrom);
   if (salaryTo) params.append('salary_to', salaryTo);
@@ -521,7 +739,6 @@ function getSearchParams() {
     const ageTo = document.getElementById('ageTo')?.value;
     const gender = document.getElementById('gender')?.value;
     const education = document.getElementById('education')?.value;
-    const professionalRole = document.getElementById('professionalRole')?.value;
     const orderBy = document.getElementById('orderBy')?.value;
     const notFromAgency = document.getElementById('notFromAgency')?.checked;
     
@@ -529,7 +746,11 @@ function getSearchParams() {
     if (ageTo) params.append('age_to', ageTo);
     if (gender) params.append('gender', gender);
     if (education) params.append('education', education);
-    if (professionalRole) params.append('professional_role', professionalRole);
+    if (selectedRoles.length > 0) {
+      selectedRoles.forEach(role => {
+        params.append('professional_role', role.id);
+      });
+    }
     if (orderBy) params.append('order_by', orderBy);
     if (notFromAgency) params.append('label', 'not_from_agency');
   }

@@ -77,14 +77,37 @@
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="schedule">График работы</label>
-                        <select id="schedule">
-                            <option value="">Любой</option>
-                            <option value="remote">Удаленная работа</option>
-                            <option value="fullDay">Полный день</option>
-                            <option value="shift">Сменный график</option>
-                            <option value="flexible">Гибкий график</option>
-                        </select>
+                        <label>График работы <span id="selectedSchedulesCount" class="schedules-count"></span></label>
+                        <div class="schedule-select-container">
+                            <div class="schedule-select-header" id="scheduleSelectHeader" onclick="toggleScheduleDropdown()">
+                                <span id="scheduleSelectText">Любой</span>
+                                <span class="schedule-select-arrow">▼</span>
+                            </div>
+                            <div class="schedule-select-dropdown" id="scheduleDropdown">
+                                <div class="schedule-actions">
+                                    <button type="button" class="schedule-btn" onclick="selectAllSchedules()">Выбрать все</button>
+                                    <button type="button" class="schedule-btn" onclick="clearAllSchedules()">Очистить</button>
+                                </div>
+                                <div class="schedule-list" id="scheduleList">
+                                    <div class="schedule-item" onclick="updateSelectedSchedules()">
+                                        <input type="checkbox" id="schedule_remote" value="remote">
+                                        <label for="schedule_remote">Удаленная работа</label>
+                                    </div>
+                                    <div class="schedule-item" onclick="updateSelectedSchedules()">
+                                        <input type="checkbox" id="schedule_fullDay" value="fullDay">
+                                        <label for="schedule_fullDay">Полный день</label>
+                                    </div>
+                                    <div class="schedule-item" onclick="updateSelectedSchedules()">
+                                        <input type="checkbox" id="schedule_shift" value="shift">
+                                        <label for="schedule_shift">Сменный график</label>
+                                    </div>
+                                    <div class="schedule-item" onclick="updateSelectedSchedules()">
+                                        <input type="checkbox" id="schedule_flexible" value="flexible">
+                                        <label for="schedule_flexible">Гибкий график</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="experience">Опыт работы</label>
@@ -151,10 +174,25 @@
                     </div>
                     <div class="form-row" id="resumeOnlyFilters" style="display: none;">
                         <div class="form-group">
-                            <label for="professionalRole">Профессия</label>
-                            <select id="professionalRole">
-                                <option value="">Все профессии</option>
-                            </select>
+                            <label>Профессия <span id="selectedRolesCount" class="roles-count"></span></label>
+                            <div class="role-select-container">
+                                <div class="role-select-header" id="roleSelectHeader" onclick="toggleRolesDropdown()">
+                                    <span id="roleSelectText">Все профессии</span>
+                                    <span class="role-select-arrow">▼</span>
+                                </div>
+                                <div class="role-select-dropdown" id="roleDropdown">
+                                    <div class="role-search">
+                                        <input type="text" id="roleSearch" placeholder="Поиск профессии..." oninput="filterRoles()">
+                                    </div>
+                                    <div class="role-actions">
+                                        <button type="button" class="role-btn" onclick="selectAllRoles()">Выбрать все</button>
+                                        <button type="button" class="role-btn" onclick="clearAllRoles()">Очистить</button>
+                                    </div>
+                                    <div class="role-list" id="roleList">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label for="orderBy">Сортировка</label>
