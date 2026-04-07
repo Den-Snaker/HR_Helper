@@ -5,6 +5,8 @@ let currentPage = 0;
 let totalPages = 0;
 let currentItems = [];
 let isAuthenticated = false;
+let selectedAreas = [];
+let areasDropdownOpen = false;
 
 const dictionaries = {
   schedules: [],
@@ -12,6 +14,29 @@ const dictionaries = {
   employments: [],
   areas: []
 };
+
+const popularAreas = [
+  { id: '1', name: 'Москва' },
+  { id: '2', name: 'Санкт-Петербург' },
+  { id: '4', name: 'Новосибирск' },
+  { id: '40', name: 'Екатеринбург' },
+  { id: '25', name: 'Казань' },
+  { id: '54', name: 'Нижний Новгород' },
+  { id: '3', name: 'Краснодар' },
+  { id: '57', name: 'Самара' },
+  { id: '61', name: 'Ростов-на-Дону' },
+  { id: '59', name: 'Челябинск' },
+  { id: '64', name: 'Уфа' },
+  { id: '8', name: 'Владивосток' },
+  { id: '28', name: 'Ижевск' },
+  { id: '65', name: 'Волгоград' },
+  { id: '71', name: 'Красноярск' },
+  { id: '68', name: 'Воронеж' },
+  { id: '104', name: 'Пермь' },
+  { id: '73', name: 'Омск' },
+  { id: '43', name: 'Тюмень' },
+  { id: '99', name: 'Другие регионы' }
+];
 
 function initTheme() {
   const savedTheme = localStorage.getItem('theme');
@@ -124,21 +149,109 @@ async function loadDictionaries() {
 }
 
 function populateAreasSelect() {
-  const select = document.getElementById('area');
-  if (!select || !dictionaries.areas) return;
+  populateAreasDropdown();
+}
+
+function populateAreasDropdown() {
+  const areaList = document.getElementById('areaList');
+  if (!areaList) return;
   
-  const popularAreas = [
-    { id: '1', name: 'Москва' },
-    { id: '2', name: 'Санкт-Петербург' },
-    { id: '99', name: 'Другие регионы' }
-  ];
-  
-  select.innerHTML = '<option value="">Все регионы</option>';
-  
+  areaList.innerHTML = '';
   popularAreas.forEach(area => {
-    select.innerHTML += `<option value="${area.id}">${area.name}</option>`;
+    const div = document.createElement('div');
+    div.className = 'area-item';
+    div.dataset.id = area.id;
+    div.dataset.name = area.name.toLowerCase();
+    div.innerHTML = `
+      <input type="checkbox" id="area_${area.id}" value="${area.id}" onchange="updateSelectedAreas()">
+      <label for="area_${area.id}">${area.name}</label>
+    `;
+    areaList.appendChild(div);
+  });
+  
+  updateAreasHeaderText();
+}
+
+function toggleAreaDropdown() {
+  const dropdown = document.getElementById('areaDropdown');
+  const header = document.getElementById('areaSelectHeader');
+  
+  if (!dropdown || !header) return;
+  
+  areasDropdownOpen = !areasDropdownOpen;
+  
+  if (areasDropdownOpen) {
+    dropdown.classList.add('open');
+    header.classList.add('active');
+  } else {
+    dropdown.classList.remove('open');
+    header.classList.remove('active');
+  }
+}
+
+function filterAreas() {
+  const searchInput = document.getElementById('areaSearch');
+  if (!searchInput) return;
+  
+  const query = searchInput.value.toLowerCase().trim();
+  const items = document.querySelectorAll('.area-item');
+  
+  items.forEach(item => {
+    const name = item.dataset.name || '';
+    if (query === '' || name.includes(query)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
   });
 }
+
+function selectAllAreas() {
+  const checkboxes = document.querySelectorAll('.area-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateSelectedAreas();
+}
+
+function clearAllAreas() {
+  const checkboxes = document.querySelectorAll('.area-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateSelectedAreas();
+}
+
+function updateSelectedAreas() {
+  const checkboxes = document.querySelectorAll('.area-item input[type="checkbox"]:checked');
+  selectedAreas = Array.from(checkboxes).map(cb => ({
+    id: cb.value,
+    name: cb.parentElement.querySelector('label').textContent
+  }));
+  
+  updateAreasHeaderText();
+}
+
+function updateAreasHeaderText() {
+  const textEl = document.getElementById('areaSelectText');
+  const countEl = document.getElementById('selectedAreasCount');
+  
+  if (!textEl) return;
+  
+  if (selectedAreas.length === 0) {
+    textEl.textContent = 'Все регионы';
+    if (countEl) countEl.textContent = '';
+  } else if (selectedAreas.length === 1) {
+    textEl.textContent = selectedAreas[0].name;
+    if (countEl) countEl.textContent = '';
+  } else {
+    textEl.textContent = 'Выбрано регионов: ' + selectedAreas.length;
+    if (countEl) countEl.textContent = selectedAreas.length;
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const container = document.querySelector('.area-select-container');
+  if (container && !container.contains(e.target) && areasDropdownOpen) {
+    toggleAreaDropdown();
+  }
+});
 
 function setupEventListeners() {
   const searchForm = document.getElementById('searchForm');
@@ -239,7 +352,6 @@ function getSearchParams() {
   const params = new URLSearchParams();
   
   const keywords = document.getElementById('keywords')?.value?.trim();
-  const area = document.getElementById('area')?.value;
   const schedule = document.getElementById('schedule')?.value;
   const experience = document.getElementById('experience')?.value;
   const salaryFrom = document.getElementById('salaryFrom')?.value;
@@ -248,7 +360,14 @@ function getSearchParams() {
   const perPage = document.getElementById('perPage')?.value || '20';
   
   if (keywords) params.append('text', keywords);
-  if (area) params.append('area', area);
+  
+  // Multiple areas support
+  if (selectedAreas.length > 0) {
+    selectedAreas.forEach(area => {
+      params.append('area', area.id);
+    });
+  }
+  
   if (schedule) params.append('schedule', schedule);
   if (experience) params.append('experience', experience);
   if (salaryFrom) params.append('salary_from', salaryFrom);

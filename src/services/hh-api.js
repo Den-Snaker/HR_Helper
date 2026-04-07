@@ -40,7 +40,13 @@ class HHApi {
     const queryParams = new URLSearchParams();
     
     if (params.text) queryParams.append('text', params.text);
-    if (params.area) queryParams.append('area', params.area);
+    if (params.area) {
+      if (Array.isArray(params.area)) {
+        params.area.forEach(a => queryParams.append('area', a));
+      } else {
+        queryParams.append('area', params.area);
+      }
+    }
     if (params.schedule) queryParams.append('schedule', params.schedule);
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
@@ -57,7 +63,13 @@ class HHApi {
     const queryParams = new URLSearchParams();
     
     if (params.text) queryParams.append('text', params.text);
-    if (params.area) queryParams.append('area', params.area);
+    if (params.area) {
+      if (Array.isArray(params.area)) {
+        params.area.forEach(a => queryParams.append('area', a));
+      } else {
+        queryParams.append('area', params.area);
+      }
+    }
     if (params.schedule) queryParams.append('schedule', params.schedule);
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);

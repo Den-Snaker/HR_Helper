@@ -44,13 +44,26 @@
                         <input type="text" id="keywords" placeholder="Например: менеджер по продажам удаленно" value="менеджер по продажам удаленно">
                     </div>
                     <div class="form-group">
-                        <label for="area">Регион</label>
-                        <select id="area">
-                            <option value="">Все регионы</option>
-                            <option value="1">Москва</option>
-                            <option value="2">Санкт-Петербург</option>
-                            <option value="99">Другие регионы</option>
-                        </select>
+                        <label>Регионы <span id="selectedAreasCount" class="areas-count"></span></label>
+                        <div class="area-select-container">
+                            <div class="area-select-header" id="areaSelectHeader" onclick="toggleAreaDropdown()">
+                                <span id="areaSelectText">Все регионы</span>
+                                <span class="area-select-arrow">▼</span>
+                            </div>
+                            <div class="area-select-dropdown" id="areaDropdown">
+                                <div class="area-search">
+                                    <input type="text" id="areaSearch" placeholder="Поиск региона..." oninput="filterAreas()">
+                                </div>
+                                <div class="area-actions">
+                                    <button type="button" class="area-btn" onclick="selectAllAreas()">Выбрать все</button>
+                                    <button type="button" class="area-btn" onclick="clearAllAreas()">Очистить</button>
+                                </div>
+                                <div class="area-list" id="areaList">
+                                    <!-- Populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" id="areas" name="areas">
                     </div>
                 </div>
 
