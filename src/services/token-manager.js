@@ -67,6 +67,23 @@ class TokenManager {
       return false;
     }
   }
+
+  getUserId() {
+    const tokens = this.load();
+    if (!tokens || !tokens.access_token) return null;
+    
+    try {
+      const parts = tokens.access_token.split('.');
+      if (parts.length === 3) {
+        const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+        return payload.user_id || payload.sub || 'default';
+      }
+    } catch (e) {
+      console.error('Error extracting user ID:', e);
+    }
+    
+    return 'default';
+  }
 }
 
 module.exports = new TokenManager();

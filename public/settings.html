@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки - HR Helper</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .settings-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .settings-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+        }
+        
+        .settings-section h2 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .mode-option {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-light);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .mode-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .mode-option.selected {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+        
+        .mode-option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .mode-option input[type="radio"] {
+            accent-color: var(--accent);
+            width: 18px;
+            height: 18px;
+        }
+        
+        .mode-option-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+        
+        .mode-option-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-left: 30px;
+        }
+        
+        .limit-input-group {
+            margin-top: 16px;
+            margin-left: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .limit-input-group.hidden {
+            display: none;
+        }
+        
+        .limit-option {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1.5px solid var(--border-light);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .limit-option:hover {
+            border-color: var(--accent);
+        }
+        
+        .limit-option.selected {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+        
+        .limit-custom-input {
+            width: 80px;
+            padding: 8px 12px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 6px;
+            font-size: 14px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .limit-custom-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .stat-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn-save {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-save:hover {
+            background: var(--accent-hover);
+        }
+        
+        .btn-cancel {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            padding: 12px 24px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-cancel:hover {
+            border-color: var(--accent);
+        }
+        
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--accent);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+            border-left: 4px solid #ff9800;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: #e65100;
+        }
+        
+        .warning-box.dark {
+            background: linear-gradient(135deg, #3d2914 0%, #4a3320 100%);
+            color: #ffb74d;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>⚙️ Настройки</h1>
+            <div class="auth-info">
+                <button class="btn btn-secondary" onclick="window.location.href='/'">← Назад к поиску</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <a href="/" class="back-link">← Вернуться к поиску</a>
+        
+        <div class="settings-container">
+            <div id="messages"></div>
+            
+            <div class="settings-section">
+                <h2>🔐 Режим работы с резюме</h2>
+                
+                <div class="warning-box" id="warningBox">
+                    Открытие контактов резюме может быть платным в зависимости от вашего тарифа на HH.ru.
+                </div>
+                
+                <form id="settingsForm">
+                    <div class="mode-option selected" data-mode="limit" onclick="selectMode('limit')">
+                        <div class="mode-option-header">
+                            <input type="radio" name="accessMode" value="limit" id="mode-limit" checked>
+                            <label for="mode-limit" class="mode-option-title">С лимитом открытий</label>
+                        </div>
+                        <div class="mode-option-desc">
+                            Ограничение количества просмотренных контактов в день
+                        </div>
+                        <div class="limit-input-group" id="limitInputGroup">
+                            <span>Лимит в день:</span>
+                            <button type="button" class="limit-option" onclick="setLimit(5)">5</button>
+                            <button type="button" class="limit-option selected" onclick="setLimit(10)">10</button>
+                            <button type="button" class="limit-option" onclick="setLimit(20)">20</button>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span>или</span>
+                                <input type="number" class="limit-custom-input" id="customLimit" placeholder="15" min="1" max="100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mode-option" data-mode="warning" onclick="selectMode('warning')">
+                        <div class="mode-option-header">
+                            <input type="radio" name="accessMode" value="warning" id="mode-warning">
+                            <label for="mode-warning" class="mode-option-title">С предупреждением</label>
+                        </div>
+                        <div class="mode-option-desc">
+                            Перед каждым открытием контактов — подтверждение
+                        </div>
+                    </div>
+                    
+                    <div class="mode-option" data-mode="unlimited" onclick="selectMode('unlimited')">
+                        <div class="mode-option-header">
+                            <input type="radio" name="accessMode" value="unlimited" id="mode-unlimited">
+                            <label for="mode-unlimited" class="mode-option-title">Без ограничений</label>
+                        </div>
+                        <div class="mode-option-desc">
+                            Полный доступ к контактам, ответственность на вас
+                        </div>
+                    </div>
+                    
+                    <div class="mode-option" data-mode="search-only" onclick="selectMode('search-only')">
+                        <div class="mode-option-header">
+                            <input type="radio" name="accessMode" value="search-only" id="mode-search-only">
+                            <label for="mode-search-only" class="mode-option-title">Только поиск (бесплатно)</label>
+                        </div>
+                        <div class="mode-option-desc">
+                            Резюме открываются на HH.ru, контакты недоступны
+                        </div>
+                    </div>
+                    
+                    <div class="btn-group">
+                        <button type="submit" class="btn-save">Сохранить настройки</button>
+                        <a href="/" class="btn-cancel">Отмена</a>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="settings-section">
+                <h2>📊 Статистика за сегодня</h2>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="viewsToday">0</div>
+                        <div class="stat-label">Просмотров резюме</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="contactsOpened">0</div>
+                        <div class="stat-label">Открыто контактов</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="remainingContacts">10</div>
+                        <div class="stat-label">Осталось открытий</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="cachedResumes">0</div>
+                        <div class="stat-label">В кэше</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h2>💾 Кэш просмотров</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                    Резюме, которые вы открывали ранее, сохраняются в кэше и могут быть просмотрены повторно без списания лимита.
+                </p>
+                <button type="button" class="btn-save" onclick="clearCache()" style="background: #ef4444;">
+                    Очистить кэш
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/settings.js"></script>
+</body>
+</html>

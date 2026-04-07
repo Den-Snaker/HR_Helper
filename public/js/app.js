@@ -131,13 +131,59 @@ function updateAuthUI() {
   const logoutBtn = document.getElementById('logoutBtn');
   const authRequired = document.getElementById('authRequired');
   const userInfo = document.getElementById('userInfo');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const usageIndicator = document.getElementById('usageIndicator');
   
   if (isAuthenticated) {
     if (loginBtn) loginBtn.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'inline-flex';
     if (authRequired) authRequired.style.display = 'none';
     if (userInfo) userInfo.style.display = 'block';
+    if (settingsBtn) settingsBtn.style.display = 'inline-flex';
+    if (usageIndicator) usageIndicator.style.display = 'flex';
+    loadUsageStats();
   } else {
+    if (loginBtn) loginBtn.style.display = 'inline-flex';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+    if (authRequired) authRequired.style.display = 'block';
+    if (userInfo) userInfo.style.display = 'none';
+    if (settingsBtn) settingsBtn.style.display = 'none';
+    if (usageIndicator) usageIndicator.style.display = 'none';
+  }
+}
+
+async function loadUsageStats() {
+  try {
+    const response = await fetch(`${API_BASE}/api/usage`);
+    if (response.ok) {
+      const stats = await response.json();
+      updateUsageIndicator(stats);
+      window.userUsageStats = stats;
+    }
+  } catch (error) {
+    console.error('Load usage stats error:', error);
+  }
+}
+
+function updateUsageIndicator(stats) {
+  const countEl = document.getElementById('usageCount');
+  const limitEl = document.getElementById('usageLimit');
+  const indicator = document.getElementById('usageIndicator');
+  
+  if (!countEl || !limitEl || !indicator) return;
+  
+  countEl.textContent = stats.contactsOpenedToday || 0;
+  limitEl.textContent = stats.contactLimit || 10;
+  
+  const remaining = stats.remainingContacts || 0;
+  indicator.classList.remove('warning', 'danger');
+  
+  if (remaining <= 2 && remaining > 0) {
+    indicator.classList.add('warning');
+  } else if (remaining <= 0) {
+    indicator.classList.add('danger');
+  }
+}
     if (loginBtn) loginBtn.style.display = 'inline-flex';
     if (logoutBtn) logoutBtn.style.display = 'none';
     if (authRequired) authRequired.style.display = 'block';
@@ -639,6 +685,253 @@ function login() {
 
 function logout() {
   window.location.href = `${API_BASE}/auth/logout`;
+}
+
+let currentResumeId = null;
+let currentResumeUrl = null;
+
+async function openResume(resumeId, resumeUrl) {
+  currentResumeId = resumeId;
+  currentResumeUrl = resumeUrl;
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/resumes/${resumeId}`);
+    const data = await response.json();
+    
+    if (!response.ok) {
+      if (data.reason === 'limit-exceeded') {
+        showLimitExceededModal(data);
+      } else if (data.reason === 'search-only') {
+        window.open(resumeUrl || `https://hh.ru/resume/${resumeId}`, '_blank');
+      } else {
+        showErrors([data.message || data.error || 'Ошибка открытия резюме']);
+      }
+      return;
+    }
+    
+    if (data._cached) {
+      console.log('Resume loaded from cache');
+    }
+    
+    if (data._limitWarning !== null && data._limitWarning <= 3) {
+      showLimitWarning(data._limitWarning);
+    }
+    
+    if (data._usage) {
+      updateUsageIndicator(data._usage);
+    }
+    
+    showResumeModal(data);
+    
+  } catch (error) {
+    console.error('Open resume error:', error);
+    showErrors(['Ошибка при открытии резюме']);
+  }
+}
+
+function showResumeModal(resume) {
+  const modal = createModal('resumeModal');
+  
+  const salary = resume.salary 
+    ? `${resume.salary.from || ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
+    : 'Не указана';
+  
+  const age = resume.age ? `${resume.age} лет` : '';
+  const name = `${resume.first_name || ''} ${resume.last_name || ''}`.trim() || 'Без имени';
+  const totalExperience = resume.total_experience?.months ? `${Math.floor(resume.total_experience.months / 12)} г. ${resume.total_experience.months % 12} мес.` : 'Нет опыта';
+  
+  let contactsHtml = '';
+  if (resume.phone || resume.email) {
+    contactsHtml = `
+      <div style="margin-top: 16px; padding: 12px; background: var(--bg-tertiary); border-radius: 8px;">
+        <strong>Контакты:</strong><br>
+        ${resume.phone ? `📞 ${resume.phone[0]?.formatted || resume.phone[0]?.value || '—'}<br>` : ''}
+        ${resume.email ? `✉️ ${resume.email}` : ''}
+        ${resume._cached ? '<br><small style="color: var(--text-secondary)">✓ Из кэша (бесплатно)</small>' : ''}
+      </div>
+    `;
+  }
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">
+        ${resume._cached ? '💾 ' : ''}${resume.title || 'Резюме'}
+      </div>
+      <div class="modal-text">
+        <div><strong>${name}</strong> ${age ? `• ${age}` : ''}</div>
+        <div style="margin-top: 8px;">
+          ${resume.area?.name || 'Регион не указан'} • Опыт: ${totalExperience}
+        </div>
+        <div style="margin-top: 8px;">
+          <span class="tag tag-salary">${salary}</span>
+        </div>
+        ${resume.schedule ? `<div style="margin-top: 8px;"><span class="tag">${resume.schedule.name}</span></div>` : ''}
+        ${contactsHtml}
+        ${resume._limitWarning !== null && resume._limitWarning <= 3 ? `<div style="margin-top: 8px; color: #e65100;">⚠️ Осталось открытий: ${resume._limitWarning}</div>` : ''}
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Закрыть</button>
+        <a href="${resume.alternate_url}" target="_blank" class="modal-btn modal-btn-confirm" style="text-decoration: none;">Открыть на HH.ru</a>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function showLimitExceededModal(data) {
+  const modal = createModal('limitModal');
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">⚠️ Лимит исчерпан</div>
+      <div class="modal-text">
+        <p>Вы использовали ${data.used} из ${data.limit} открытий контактов за сегодня.</p>
+        <p>Лимит сбросится в 00:00 по московскому времени.</p>
+        <p style="margin-top: 16px;">
+          Вы можете:
+          <ul>
+            <li>Перейти в <a href="/settings.html">настройки</a> и изменить лимит</li>
+            <li>Открыть резюме на HH.ru (контакты не будут доступны)</li>
+            <li>Дождаться сброса лимита завтра</li>
+          </ul>
+        </p>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Отмена</button>
+        <a href="/settings.html" class="modal-btn modal-btn-confirm" style="text-decoration: none;">Настройки</a>
+        <button class="modal-btn modal-btn-danger" onclick="openOnHh()">Открыть на HH.ru</button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function showLimitWarning(remaining) {
+  const msgDiv = document.getElementById('messages');
+  if (msgDiv) {
+    msgDiv.innerHTML = `<div class="warning-box" id="limitWarning">⚠️ Осталось ${remaining} открытий контактов. <a href="/settings.html">Изменить лимит</a></div>`;
+    setTimeout(() => {
+      const warning = document.getElementById('limitWarning');
+      if (warning) warning.remove();
+    }, 5000);
+  }
+}
+
+function showConfirmationModal(callback) {
+  const modal = createModal('confirmModal');
+  
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const warningClass = isDark ? 'modal-warning dark' : 'modal-warning';
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">⚠️ Подтверждение</div>
+      <div class="modal-text">
+        <div class="${warningClass}">
+          Открытие контактов резюме может быть платным в зависимости от вашего тарифа на HH.ru.
+        </div>
+        <p>Продолжить и открыть контакты?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Отмена</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmOpenResume()">Открыть контакты</button>
+      </div>
+    </div>
+  `;
+  
+  modal.innerHTML = `
+    <div class="modal">
+      <div class="modal-title">⚠️ Подтверждение</div>
+      <div class="modal-text">
+        <div class="${warningClass}">
+          Открытие контактов резюме может быть платным в зависимости от вашего тарифа на HH.ru.
+        </div>
+        <p>Продолжить и открыть контакты?</p>
+      </div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Отмена</button>
+        <button class="modal-btn modal-btn-confirm" onclick="confirmOpenResume()">Открыть контакты</button>
+      </div>
+    </div>
+  `;
+  
+  window.confirmCallback = callback;
+  document.body.appendChild(modal);
+  setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function confirmOpenResume() {
+  closeModal();
+  if (window.confirmCallback) {
+    window.confirmCallback();
+    window.confirmCallback = null;
+  }
+}
+
+function openOnHh() {
+  if (currentResumeUrl) {
+    window.open(currentResumeUrl, '_blank');
+  }
+  closeModal();
+}
+
+function createModal(id) {
+  const existingModal = document.getElementById(id);
+  if (existingModal) existingModal.remove();
+  
+  const modal = document.createElement('div');
+  modal.className = 'modal-overlay';
+  modal.id = id;
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal();
+  };
+  
+  return modal;
+}
+
+function closeModal() {
+  const modals = document.querySelectorAll('.modal-overlay');
+  modals.forEach(modal => {
+    modal.classList.remove('open');
+    setTimeout(() => modal.remove(), 300);
+  });
+}
+
+function renderResumeCard(resume) {
+  const salary = resume.salary 
+    ? `${resume.salary.from || ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
+    : 'Зарплата не указана';
+  
+  const salary2 = resume.salary 
+    ? `${resume.salary.from ? resume.salary.from + ' ' : ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
+    : 'Зарплата не указана';
+  
+  const age = resume.age ? `${resume.age} лет` : '';
+  const name = `${resume.first_name || ''} ${resume.last_name || ''}`.trim() || 'Без имени';
+  
+  const tags = [];
+  if (resume.schedule) tags.push(resume.schedule.name);
+  if (resume.total_experience?.months) tags.push(`Опыт: ${resume.total_experience.months} мес.`);
+  if (resume.education?.level?.name) tags.push(resume.education.level.name);
+  
+  return `
+    <div class="item-card">
+      <div class="item-title">
+        <a href="${resume.alternate_url}" target="_blank" rel="noopener" onclick="event.preventDefault(); openResume('${resume.id}', '${resume.alternate_url}')">${resume.title || 'Без должности'}</a>
+      </div>
+      <div class="item-meta">
+        ${name} ${age ? '• ' + age : ''} ${resume.area ? '• ' + resume.area.name : ''}
+      </div>
+      <div class="item-meta" style="margin-top: 8px;">
+        <span class="tag tag-salary">${salary}</span>
+      </div>
+      ${tags.length ? `<div class="item-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
+    </div>
+  `;
 }
 
 document.addEventListener('DOMContentLoaded', init);

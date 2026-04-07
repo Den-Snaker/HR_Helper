@@ -11,6 +11,10 @@
         <div class="container">
             <h1>HR Helper</h1>
             <div class="auth-info">
+                <div id="usageIndicator" class="usage-indicator" style="display: none;" title="Открыто контактов сегодня">
+                    <span id="usageCount">0</span>/<span id="usageLimit">10</span>
+                </div>
+                <a href="/settings.html" class="btn btn-settings" id="settingsBtn" style="display: none;" title="Настройки">⚙️</a>
                 <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
                     <span id="themeIcon">🌙</span>
                 </button>
