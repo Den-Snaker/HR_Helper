@@ -443,6 +443,7 @@ function updateSelectedIndustries() {
     name: cb.parentElement.querySelector('label').textContent
   }));
   
+  console.log('Selected industries:', selectedIndustries);
   updateIndustriesHeaderText();
 }
 
@@ -457,7 +458,7 @@ function updateIndustriesHeaderText() {
     if (countEl) countEl.textContent = '';
   } else if (selectedIndustries.length === 1) {
     textEl.textContent = selectedIndustries[0].name;
-    if (countEl) countEl.textContent = '';
+    if (countEl) countEl.textContent = '1';
   } else {
     textEl.textContent = 'Выбрано отраслей: ' + selectedIndustries.length;
     if (countEl) countEl.textContent = selectedIndustries.length;
@@ -1032,9 +1033,12 @@ function getSearchParams() {
       });
     }
     if (selectedIndustries.length > 0) {
+      console.log('Adding employer_industry params:', selectedIndustries);
       selectedIndustries.forEach(industry => {
         params.append('employer_industry', industry.id);
       });
+    } else {
+      console.log('No industries selected');
     }
     if (orderBy) params.append('order_by', orderBy);
     if (notFromAgency) params.append('label', 'not_from_agency');
