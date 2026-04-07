@@ -345,6 +345,7 @@ function populateIndustries() {
   const industries = dictionaries.industries;
   
   if (Array.isArray(industries)) {
+    console.log('First industry sample:', industries[0]); // Debug: show structure
     industries.forEach(industry => {
       // Основная отрасль
       allIndustries.push({
@@ -937,6 +938,8 @@ async function doSearch() {
   // Debug: show what's being searched
   console.log('Search params:', params.toString());
   console.log('Selected areas:', selectedAreas.map(a => `${a.id} (${a.name})`));
+  console.log('Selected industries:', selectedIndustries);
+  console.log('Selected experiences:', selectedExperiences);
   
   // Show selected areas to user
   if (selectedAreas.length > 0) {
