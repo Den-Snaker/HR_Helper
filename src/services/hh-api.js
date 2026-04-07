@@ -130,6 +130,8 @@ class HHApi {
     if (params.page !== undefined) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
     
+    console.log('HH API resume search URL:', `/resumes?${queryParams.toString()}`);
+    
     return this.request(`/resumes?${queryParams.toString()}`);
   }
 

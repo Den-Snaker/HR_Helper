@@ -993,9 +993,12 @@ function getSearchParams() {
   
   // Multiple areas support
   if (selectedAreas.length > 0) {
+    console.log('Adding areas to params:', selectedAreas);
     selectedAreas.forEach(area => {
       params.append('area', area.id);
     });
+  } else {
+    console.log('No areas selected');
   }
   
   // Multiple schedules support
@@ -1046,7 +1049,11 @@ function getSearchParams() {
     if (orderBy) params.append('order_by', orderBy);
     if (notFromAgency) params.append('label', 'not_from_recruitment_agency');
     console.log('Search params for resumes:', params.toString());
+    console.log('Selected industries:', selectedIndustries);
+    console.log('Selected experiences:', selectedExperiences);
   }
+  
+  console.log('Final search URL params:', params.toString());
   
   return params;
 }
