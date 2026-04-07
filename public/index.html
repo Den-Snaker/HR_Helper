@@ -204,6 +204,29 @@
                             </select>
                         </div>
                     </div>
+                    <div class="form-row" id="resumeOnlyIndustry" style="display: none;">
+                        <div class="form-group">
+                            <label>Отрасль предыдущего места работы <span id="selectedIndustriesCount" class="industries-count"></span></label>
+                            <div class="industry-select-container">
+                                <div class="industry-select-header" id="industrySelectHeader" onclick="toggleIndustriesDropdown()">
+                                    <span id="industrySelectText">Любая отрасль</span>
+                                    <span class="industry-select-arrow">▼</span>
+                                </div>
+                                <div class="industry-select-dropdown" id="industryDropdown">
+                                    <div class="industry-search">
+                                        <input type="text" id="industrySearch" placeholder="Поиск отрасли..." oninput="filterIndustries()">
+                                    </div>
+                                    <div class="industry-actions">
+                                        <button type="button" class="industry-btn" onclick="selectAllIndustries()">Выбрать все</button>
+                                        <button type="button" class="industry-btn" onclick="clearAllIndustries()">Очистить</button>
+                                    </div>
+                                    <div class="industry-list" id="industryList">
+                                        <!-- Populated by JavaScript -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-row" id="resumeOnlyCheckboxes" style="display: none;">
                         <div class="form-group">
                             <label class="checkbox-group">

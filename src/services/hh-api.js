@@ -106,6 +106,13 @@ class HHApi {
         queryParams.append('label', params.label);
       }
     }
+    if (params.employer_industry) {
+      if (Array.isArray(params.employer_industry)) {
+        params.employer_industry.forEach(i => queryParams.append('employer_industry', i));
+      } else {
+        queryParams.append('employer_industry', params.employer_industry);
+      }
+    }
     if (params.only_with_salary) queryParams.append('only_with_salary', 'true');
     if (params.order_by) queryParams.append('order_by', params.order_by);
     if (params.page !== undefined) queryParams.append('page', params.page);
@@ -132,6 +139,10 @@ class HHApi {
 
   async getProfessionalRoles() {
     return this.request('/professional_roles');
+  }
+
+  async getIndustries() {
+    return this.request('/industries');
   }
 
   async getMe() {

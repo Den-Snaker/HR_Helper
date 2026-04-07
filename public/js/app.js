@@ -8,16 +8,19 @@ let isAuthenticated = false;
 let selectedAreas = [];
 let selectedRoles = [];
 let selectedSchedules = [];
+let selectedIndustries = [];
 let areasDropdownOpen = false;
 let rolesDropdownOpen = false;
 let schedulesDropdownOpen = false;
+let industriesDropdownOpen = false;
 
 const dictionaries = {
   schedules: [],
   experiences: [],
   employments: [],
   areas: [],
-  professional_roles: []
+  professional_roles: [],
+  industries: []
 };
 
 const popularAreas = [
@@ -199,10 +202,11 @@ function updateUsageIndicator(stats) {
 
 async function loadDictionaries() {
   try {
-    const [areasRes, dictsRes, rolesRes] = await Promise.all([
+    const [areasRes, dictsRes, rolesRes, industriesRes] = await Promise.all([
       fetch(`${API_BASE}/api/dictionaries/areas`),
       fetch(`${API_BASE}/api/dictionaries`),
-      fetch(`${API_BASE}/api/dictionaries/professional_roles`)
+      fetch(`${API_BASE}/api/dictionaries/professional_roles`),
+      fetch(`${API_BASE}/api/dictionaries/industries`)
     ]);
     
     if (areasRes.ok) {
@@ -224,6 +228,15 @@ async function loadDictionaries() {
       populateProfessionalRoles();
     } else {
       console.error('Failed to load professional roles:', rolesRes.status, rolesRes.statusText);
+    }
+    
+    if (industriesRes.ok) {
+      const industriesData = await industriesRes.json();
+      console.log('Industries data:', industriesData);
+      dictionaries.industries = industriesData;
+      populateIndustries();
+    } else {
+      console.error('Failed to load industries:', industriesRes.status, industriesRes.statusText);
     }
   } catch (error) {
     console.error('Load dictionaries error:', error);
@@ -306,6 +319,147 @@ function populateProfessionalRoles() {
   });
   
   updateRolesHeaderText();
+}
+
+function populateIndustries() {
+  const industryList = document.getElementById('industryList');
+  if (!industryList) {
+    console.error('industryList element not found');
+    return;
+  }
+  
+  if (!dictionaries.industries) {
+    console.error('industries not loaded');
+    return;
+  }
+  
+  console.log('Populating industries, data:', dictionaries.industries);
+  
+  industryList.innerHTML = '';
+  
+  let allIndustries = [];
+  
+  // API возвращает массив отраслей с возможными вложенными индустриями
+  const industries = dictionaries.industries;
+  
+  if (Array.isArray(industries)) {
+    industries.forEach(industry => {
+      // Основная отрасль
+      allIndustries.push({
+        id: industry.id,
+        name: industry.name
+      });
+      
+      // Вложенные подотрасли
+      if (industry.industries && Array.isArray(industry.industries)) {
+        industry.industries.forEach(sub => {
+          allIndustries.push({
+            id: sub.id,
+            name: sub.name,
+            parent: industry.name
+          });
+        });
+      }
+    });
+  }
+  
+  console.log('Total industries extracted:', allIndustries.length);
+  
+  if (allIndustries.length === 0) {
+    industryList.innerHTML = '<div style="padding: 12px; color: var(--text-secondary);">Нет данных об отраслях</div>';
+    return;
+  }
+  
+  // Сортировка по имени
+  allIndustries.sort((a, b) => a.name.localeCompare(b.name));
+  
+  allIndustries.forEach(industry => {
+    const div = document.createElement('div');
+    div.className = 'industry-item';
+    div.dataset.id = industry.id;
+    div.dataset.name = industry.name.toLowerCase();
+    div.innerHTML = `
+      <input type="checkbox" id="industry_${industry.id}" value="${industry.id}" onchange="updateSelectedIndustries()">
+      <label for="industry_${industry.id}">${industry.name}</label>
+    `;
+    industryList.appendChild(div);
+  });
+  
+  updateIndustriesHeaderText();
+}
+
+function toggleIndustriesDropdown() {
+  const dropdown = document.getElementById('industryDropdown');
+  const header = document.getElementById('industrySelectHeader');
+  
+  if (!dropdown || !header) return;
+  
+  industriesDropdownOpen = !industriesDropdownOpen;
+  
+  if (industriesDropdownOpen) {
+    dropdown.classList.add('open');
+    header.classList.add('active');
+  } else {
+    dropdown.classList.remove('open');
+    header.classList.remove('active');
+  }
+}
+
+function filterIndustries() {
+  const searchInput = document.getElementById('industrySearch');
+  if (!searchInput) return;
+  
+  const query = searchInput.value.toLowerCase().trim();
+  const items = document.querySelectorAll('.industry-item');
+  
+  items.forEach(item => {
+    const name = item.dataset.name || '';
+    if (query === '' || name.includes(query)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+}
+
+function selectAllIndustries() {
+  const checkboxes = document.querySelectorAll('.industry-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateSelectedIndustries();
+}
+
+function clearAllIndustries() {
+  const checkboxes = document.querySelectorAll('.industry-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateSelectedIndustries();
+}
+
+function updateSelectedIndustries() {
+  const checkboxes = document.querySelectorAll('.industry-item input[type="checkbox"]:checked');
+  selectedIndustries = Array.from(checkboxes).map(cb => ({
+    id: cb.value,
+    name: cb.parentElement.querySelector('label').textContent
+  }));
+  
+  updateIndustriesHeaderText();
+}
+
+function updateIndustriesHeaderText() {
+  const textEl = document.getElementById('industrySelectText');
+  const countEl = document.getElementById('selectedIndustriesCount');
+  
+  if (!textEl) return;
+  
+  if (selectedIndustries.length === 0) {
+    textEl.textContent = 'Любая отрасль';
+    if (countEl) countEl.textContent = '';
+  } else if (selectedIndustries.length === 1) {
+    textEl.textContent = selectedIndustries[0].name;
+    if (countEl) countEl.textContent = '';
+  } else {
+    textEl.textContent = 'Выбрано отраслей: ' + selectedIndustries.length;
+    if (countEl) countEl.textContent = selectedIndustries.length;
+  }
 }
 
 function toggleRolesDropdown() {
@@ -606,6 +760,7 @@ document.addEventListener('click', function(e) {
   const areaContainer = document.querySelector('.area-select-container');
   const roleContainer = document.querySelector('.role-select-container');
   const scheduleContainer = document.querySelector('.schedule-select-container');
+  const industryContainer = document.querySelector('.industry-select-container');
   
   if (areaContainer && !areaContainer.contains(e.target) && areasDropdownOpen) {
     toggleAreaDropdown();
@@ -615,6 +770,9 @@ document.addEventListener('click', function(e) {
   }
   if (scheduleContainer && !scheduleContainer.contains(e.target) && schedulesDropdownOpen) {
     toggleScheduleDropdown();
+  }
+  if (industryContainer && !industryContainer.contains(e.target) && industriesDropdownOpen) {
+    toggleIndustriesDropdown();
   }
 });
 
@@ -668,12 +826,16 @@ function setSearchType(type) {
   // Показываем/скрываем фильтры только для резюме
   const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
   const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
+  const resumeOnlyIndustry = document.getElementById('resumeOnlyIndustry');
   
   if (resumeOnlyFilters) {
     resumeOnlyFilters.style.display = type === 'resumes' ? 'grid' : 'none';
   }
   if (resumeOnlyCheckboxes) {
     resumeOnlyCheckboxes.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+  if (resumeOnlyIndustry) {
+    resumeOnlyIndustry.style.display = type === 'resumes' ? 'grid' : 'none';
   }
 }
 
@@ -785,6 +947,11 @@ function getSearchParams() {
         params.append('professional_role', role.id);
       });
     }
+    if (selectedIndustries.length > 0) {
+      selectedIndustries.forEach(industry => {
+        params.append('employer_industry', industry.id);
+      });
+    }
     if (orderBy) params.append('order_by', orderBy);
     if (notFromAgency) params.append('label', 'not_from_agency');
   }
@@ -808,6 +975,9 @@ function renderResults(data) {
   }
   if (selectedSchedules.length > 0) {
     filterInfo += `<span class="filter-tag">График: ${selectedSchedules.map(s => s.name).join(', ')}</span>`;
+  }
+  if (selectedIndustries.length > 0) {
+    filterInfo += `<span class="filter-tag">Отрасль: ${selectedIndustries.map(i => i.name).join(', ')}</span>`;
   }
   
   let html = `<div class="form-card results-header">

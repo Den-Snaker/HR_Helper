@@ -76,6 +76,7 @@ router.get('/resumes', checkAuth, async (req, res) => {
       employment: req.query.employment,
       professional_role: req.query.professional_role,
       label: req.query.label,
+      employer_industry: req.query.employer_industry,
       only_with_salary: req.query.only_with_salary,
       order_by: req.query.order_by,
       page: parseInt(req.query.page) || 0,
@@ -279,6 +280,15 @@ router.get('/dictionaries/areas', async (req, res) => {
 router.get('/dictionaries/professional_roles', async (req, res) => {
   try {
     const data = await hhApi.getProfessionalRoles();
+    res.json(data);
+  } catch (error) {
+    res.status(error.status || 500).json({ error: error.message });
+  }
+});
+
+router.get('/dictionaries/industries', async (req, res) => {
+  try {
+    const data = await hhApi.getIndustries();
     res.json(data);
   } catch (error) {
     res.status(error.status || 500).json({ error: error.message });
