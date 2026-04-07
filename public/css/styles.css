@@ -309,6 +309,36 @@ header h1 {
 
 .results-header {
   display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.results-count {
+  font-size: 16px;
+  color: var(--text-primary);
+}
+
+.results-count strong {
+  color: var(--accent);
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter-tag {
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+}
+
+.results-header {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
@@ -319,10 +349,6 @@ header h1 {
 .results-count {
   font-size: 16px;
   color: var(--text-primary);
-}
-
-.results-count strong {
-  color: var(--accent);
 }
 
 .item-card {

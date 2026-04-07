@@ -701,6 +701,17 @@ async function doSearch() {
   
   const params = getSearchParams();
   
+  // Debug: show what's being searched
+  console.log('Search params:', params.toString());
+  console.log('Selected areas:', selectedAreas.map(a => `${a.id} (${a.name})`));
+  
+  // Show selected areas to user
+  if (selectedAreas.length > 0) {
+    console.log('Filtering by areas:', selectedAreas.map(a => a.name).join(', '));
+  } else {
+    console.log('No area filter - searching ALL regions');
+  }
+  
   try {
     const endpoint = currentSearchType === 'vacancies' ? '/api/vacancies' : '/api/resumes';
     const response = await fetch(`${API_BASE}${endpoint}?${params.toString()}`);
@@ -790,8 +801,18 @@ function renderResults(data) {
     return;
   }
   
+  // Build filter info
+  let filterInfo = '';
+  if (selectedAreas.length > 0) {
+    filterInfo += `<span class="filter-tag">Регионы: ${selectedAreas.map(a => a.name).join(', ')}</span>`;
+  }
+  if (selectedSchedules.length > 0) {
+    filterInfo += `<span class="filter-tag">График: ${selectedSchedules.map(s => s.name).join(', ')}</span>`;
+  }
+  
   let html = `<div class="form-card results-header">
     <span class="results-count">Найдено: <strong>${data.found?.toLocaleString?.() || data.items.length}</strong> ${currentSearchType === 'vacancies' ? 'вакансий' : 'резюме'}</span>
+    ${filterInfo ? `<div class="active-filters">${filterInfo}</div>` : ''}
   </div>`;
   
   if (currentSearchType === 'vacancies') {
