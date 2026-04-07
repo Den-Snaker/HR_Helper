@@ -184,12 +184,6 @@ function updateUsageIndicator(stats) {
     indicator.classList.add('danger');
   }
 }
-    if (loginBtn) loginBtn.style.display = 'inline-flex';
-    if (logoutBtn) logoutBtn.style.display = 'none';
-    if (authRequired) authRequired.style.display = 'block';
-    if (userInfo) userInfo.style.display = 'none';
-  }
-}
 
 async function loadDictionaries() {
   try {
@@ -563,7 +557,7 @@ function renderResumeCard(resume) {
   return `
     <div class="item-card">
       <div class="item-title">
-        <a href="${resume.alternate_url}" target="_blank" rel="noopener">${resume.title || 'Без должности'}</a>
+        <a href="${resume.alternate_url}" target="_blank" rel="noopener" onclick="event.preventDefault(); openResume('${resume.id}', '${resume.alternate_url}')">${resume.title || 'Без должности'}</a>
       </div>
       <div class="item-meta">
         ${name} ${age ? '• ' + age : ''} ${resume.area ? '• ' + resume.area.name : ''}
@@ -899,39 +893,6 @@ function closeModal() {
     modal.classList.remove('open');
     setTimeout(() => modal.remove(), 300);
   });
-}
-
-function renderResumeCard(resume) {
-  const salary = resume.salary 
-    ? `${resume.salary.from || ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
-    : 'Зарплата не указана';
-  
-  const salary2 = resume.salary 
-    ? `${resume.salary.from ? resume.salary.from + ' ' : ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
-    : 'Зарплата не указана';
-  
-  const age = resume.age ? `${resume.age} лет` : '';
-  const name = `${resume.first_name || ''} ${resume.last_name || ''}`.trim() || 'Без имени';
-  
-  const tags = [];
-  if (resume.schedule) tags.push(resume.schedule.name);
-  if (resume.total_experience?.months) tags.push(`Опыт: ${resume.total_experience.months} мес.`);
-  if (resume.education?.level?.name) tags.push(resume.education.level.name);
-  
-  return `
-    <div class="item-card">
-      <div class="item-title">
-        <a href="${resume.alternate_url}" target="_blank" rel="noopener" onclick="event.preventDefault(); openResume('${resume.id}', '${resume.alternate_url}')">${resume.title || 'Без должности'}</a>
-      </div>
-      <div class="item-meta">
-        ${name} ${age ? '• ' + age : ''} ${resume.area ? '• ' + resume.area.name : ''}
-      </div>
-      <div class="item-meta" style="margin-top: 8px;">
-        <span class="tag tag-salary">${salary}</span>
-      </div>
-      ${tags.length ? `<div class="item-tags">${tags.map(t => `<span class="tag">${t}</span>`).join('')}</div>` : ''}
-    </div>
-  `;
 }
 
 document.addEventListener('DOMContentLoaded', init);
