@@ -1,0 +1,56 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci --production
+      
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /var/www/hr-helper
+            
+            # Pull latest code
+            git pull origin main || git clone https://github.com/Den-Snaker/HR_Helper.git .
+            
+            # Install dependencies
+            npm ci --production
+            
+            # Setup environment file
+            if [ ! -f .env ]; then
+              echo "HH_CLIENT_ID=${{ secrets.HH_CLIENT_ID }}" > .env
+              echo "HH_CLIENT_SECRET=${{ secrets.HH_CLIENT_SECRET }}" >> .env
+              echo "REDIRECT_URI=https://hr.ctpco.ru/auth/callback" >> .env
+              echo "PORT=5001" >> .env
+              echo "SESSION_SECRET=$(openssl rand -hex 32)" >> .env
+            fi
+            
+            # Restart or start PM2
+            pm2 restart hr-helper || pm2 start src/server.js --name hr-helper
+            pm2 save
+            
+      - name: Notify deployment status
+        if: always()
+        run: |
+          echo "Deployment completed at $(date)"
