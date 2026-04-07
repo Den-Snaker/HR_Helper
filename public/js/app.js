@@ -1041,7 +1041,8 @@ function getSearchParams() {
       console.log('No industries selected');
     }
     if (orderBy) params.append('order_by', orderBy);
-    if (notFromAgency) params.append('label', 'not_from_agency');
+    if (notFromAgency) params.append('label', 'not_from_recruitment_agency');
+    console.log('Search params for resumes:', params.toString());
   }
   
   return params;
