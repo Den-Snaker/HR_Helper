@@ -54,7 +54,13 @@ class HHApi {
         queryParams.append('schedule', params.schedule);
       }
     }
-    if (params.experience) queryParams.append('experience', params.experience);
+    if (params.experience) {
+      if (Array.isArray(params.experience)) {
+        params.experience.forEach(e => queryParams.append('experience', e));
+      } else {
+        queryParams.append('experience', params.experience);
+      }
+    }
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
     if (params.salary_to) queryParams.append('salary_to', params.salary_to);
     if (params.currency) queryParams.append('currency', params.currency);
@@ -83,7 +89,13 @@ class HHApi {
         queryParams.append('schedule', params.schedule);
       }
     }
-    if (params.experience) queryParams.append('experience', params.experience);
+    if (params.experience) {
+      if (Array.isArray(params.experience)) {
+        params.experience.forEach(e => queryParams.append('experience', e));
+      } else {
+        queryParams.append('experience', params.experience);
+      }
+    }
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
     if (params.salary_to) queryParams.append('salary_to', params.salary_to);
     if (params.currency) queryParams.append('currency', params.currency);

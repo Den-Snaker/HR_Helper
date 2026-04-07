@@ -110,14 +110,37 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="experience">Опыт работы</label>
-                        <select id="experience">
-                            <option value="">Любой</option>
-                            <option value="noExperience">Нет опыта</option>
-                            <option value="between1And3">От 1 до 3 лет</option>
-                            <option value="between3And6">От 3 до 6 лет</option>
-                            <option value="moreThan6">Более 6 лет</option>
-                        </select>
+                        <label>Опыт работы <span id="selectedExperiencesCount" class="experiences-count"></span></label>
+                        <div class="experience-select-container">
+                            <div class="experience-select-header" id="experienceSelectHeader">
+                                <span id="experienceSelectText">Любой</span>
+                                <span class="experience-select-arrow">▼</span>
+                            </div>
+                            <div class="experience-select-dropdown" id="experienceDropdown">
+                                <div class="experience-actions">
+                                    <button type="button" class="experience-btn" onclick="selectAllExperiences()">Выбрать все</button>
+                                    <button type="button" class="experience-btn" onclick="clearAllExperiences()">Очистить</button>
+                                </div>
+                                <div class="experience-list" id="experienceList">
+                                    <div class="experience-item" onclick="updateSelectedExperiences()">
+                                        <input type="checkbox" id="exp_noExperience" value="noExperience">
+                                        <label for="exp_noExperience">Нет опыта</label>
+                                    </div>
+                                    <div class="experience-item" onclick="updateSelectedExperiences()">
+                                        <input type="checkbox" id="exp_between1And3" value="between1And3">
+                                        <label for="exp_between1And3">От 1 до 3 лет</label>
+                                    </div>
+                                    <div class="experience-item" onclick="updateSelectedExperiences()">
+                                        <input type="checkbox" id="exp_between3And6" value="between3And6">
+                                        <label for="exp_between3And6">От 3 до 6 лет</label>
+                                    </div>
+                                    <div class="experience-item" onclick="updateSelectedExperiences()">
+                                        <input type="checkbox" id="exp_moreThan6" value="moreThan6">
+                                        <label for="exp_moreThan6">Более 6 лет</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="salaryFrom">Зарплата от (руб.)</label>
@@ -225,6 +248,11 @@
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="requiredKeywords">Обязательные слова в резюме</label>
+                            <input type="text" id="requiredKeywords" placeholder="Например: !1С !Excel !Английский" title="Используйте ! перед словом для обязательного наличия">
+                            <small style="color: var(--text-secondary); font-size: 12px;">Используйте ! перед словом для обязательного наличия в резюме</small>
                         </div>
                     </div>
                     <div class="form-row" id="resumeOnlyCheckboxes" style="display: none;">

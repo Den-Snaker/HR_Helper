@@ -9,10 +9,12 @@ let selectedAreas = [];
 let selectedRoles = [];
 let selectedSchedules = [];
 let selectedIndustries = [];
+let selectedExperiences = [];
 let areasDropdownOpen = false;
 let rolesDropdownOpen = false;
 let schedulesDropdownOpen = false;
 let industriesDropdownOpen = false;
+let experiencesDropdownOpen = false;
 
 const dictionaries = {
   schedules: [],
@@ -462,6 +464,70 @@ function updateIndustriesHeaderText() {
   }
 }
 
+function toggleExperienceDropdown() {
+  const dropdown = document.getElementById('experienceDropdown');
+  const header = document.getElementById('experienceSelectHeader');
+  
+  if (!dropdown || !header) return;
+  
+  experiencesDropdownOpen = !experiencesDropdownOpen;
+  
+  if (experiencesDropdownOpen) {
+    dropdown.classList.add('open');
+    header.classList.add('active');
+  } else {
+    dropdown.classList.remove('open');
+    header.classList.remove('active');
+  }
+}
+
+function selectAllExperiences() {
+  const checkboxes = document.querySelectorAll('.experience-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = true);
+  updateSelectedExperiences();
+}
+
+function clearAllExperiences() {
+  const checkboxes = document.querySelectorAll('.experience-item input[type="checkbox"]');
+  checkboxes.forEach(cb => cb.checked = false);
+  updateSelectedExperiences();
+}
+
+function updateSelectedExperiences() {
+  const checkboxes = document.querySelectorAll('.experience-item input[type="checkbox"]:checked');
+  const expNames = {
+    'noExperience': 'Нет опыта',
+    'between1And3': 'От 1 до 3 лет',
+    'between3And6': 'От 3 до 6 лет',
+    'moreThan6': 'Более 6 лет'
+  };
+  
+  selectedExperiences = Array.from(checkboxes).map(cb => ({
+    id: cb.value,
+    name: expNames[cb.value] || cb.value
+  }));
+  
+  updateExperiencesHeaderText();
+}
+
+function updateExperiencesHeaderText() {
+  const textEl = document.getElementById('experienceSelectText');
+  const countEl = document.getElementById('selectedExperiencesCount');
+  
+  if (!textEl) return;
+  
+  if (selectedExperiences.length === 0) {
+    textEl.textContent = 'Любой';
+    if (countEl) countEl.textContent = '';
+  } else if (selectedExperiences.length === 1) {
+    textEl.textContent = selectedExperiences[0].name;
+    if (countEl) countEl.textContent = '';
+  } else {
+    textEl.textContent = 'Выбрано: ' + selectedExperiences.length;
+    if (countEl) countEl.textContent = selectedExperiences.length;
+  }
+}
+
 function toggleRolesDropdown() {
   const dropdown = document.getElementById('roleDropdown');
   const header = document.getElementById('roleSelectHeader');
@@ -761,6 +827,7 @@ document.addEventListener('click', function(e) {
   const roleContainer = document.querySelector('.role-select-container');
   const scheduleContainer = document.querySelector('.schedule-select-container');
   const industryContainer = document.querySelector('.industry-select-container');
+  const experienceContainer = document.querySelector('.experience-select-container');
   
   if (areaContainer && !areaContainer.contains(e.target) && areasDropdownOpen) {
     toggleAreaDropdown();
@@ -773,6 +840,9 @@ document.addEventListener('click', function(e) {
   }
   if (industryContainer && !industryContainer.contains(e.target) && industriesDropdownOpen) {
     toggleIndustriesDropdown();
+  }
+  if (experienceContainer && !experienceContainer.contains(e.target) && experiencesDropdownOpen) {
+    toggleExperienceDropdown();
   }
 });
 
@@ -901,13 +971,21 @@ function getSearchParams() {
   const params = new URLSearchParams();
   
   const keywords = document.getElementById('keywords')?.value?.trim();
-  const experience = document.getElementById('experience')?.value;
   const salaryFrom = document.getElementById('salaryFrom')?.value;
   const salaryTo = document.getElementById('salaryTo')?.value;
   const currency = document.getElementById('currency')?.value || 'RUR';
   const perPage = document.getElementById('perPage')?.value || '20';
   
-  if (keywords) params.append('text', keywords);
+  // Combine main keywords with required keywords for resumes
+  let searchText = keywords || '';
+  if (currentSearchType === 'resumes') {
+    const requiredKeywords = document.getElementById('requiredKeywords')?.value?.trim();
+    if (requiredKeywords) {
+      searchText = searchText ? `${searchText} ${requiredKeywords}` : requiredKeywords;
+    }
+  }
+  
+  if (searchText) params.append('text', searchText);
   
   // Multiple areas support
   if (selectedAreas.length > 0) {
@@ -923,7 +1001,13 @@ function getSearchParams() {
     });
   }
   
-  if (experience) params.append('experience', experience);
+  // Multiple experiences support
+  if (selectedExperiences.length > 0) {
+    selectedExperiences.forEach(exp => {
+      params.append('experience', exp.id);
+    });
+  }
+  
   if (salaryFrom) params.append('salary_from', salaryFrom);
   if (salaryTo) params.append('salary_to', salaryTo);
   if (currency) params.append('currency', currency);
