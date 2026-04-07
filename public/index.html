@@ -31,7 +31,7 @@
         <div class="form-card">
             <div class="tabs">
                 <button id="tabVacancies" class="tab active" onclick="setSearchType('vacancies')">Вакансии</button>
-                <button id="tabResumes" class="tab" disabled>Резюме (требуется авторизация)</button>
+                <button id="tabResumes" class="tab" onclick="handleResumeTabClick()">Резюме</button>
             </div>
 
             <form id="searchForm" onsubmit="return false;">

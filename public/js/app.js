@@ -56,20 +56,17 @@ function updateAuthUI() {
   const loginBtn = document.getElementById('loginBtn');
   const logoutBtn = document.getElementById('logoutBtn');
   const authRequired = document.getElementById('authRequired');
-  const resumesTab = document.getElementById('resumesTab');
   const userInfo = document.getElementById('userInfo');
   
   if (isAuthenticated) {
     if (loginBtn) loginBtn.style.display = 'none';
     if (logoutBtn) logoutBtn.style.display = 'inline-flex';
     if (authRequired) authRequired.style.display = 'none';
-    if (resumesTab) resumesTab.disabled = false;
     if (userInfo) userInfo.style.display = 'block';
   } else {
     if (loginBtn) loginBtn.style.display = 'inline-flex';
     if (logoutBtn) logoutBtn.style.display = 'none';
     if (authRequired) authRequired.style.display = 'block';
-    if (resumesTab) resumesTab.disabled = true;
     if (userInfo) userInfo.style.display = 'none';
   }
 }
@@ -123,23 +120,6 @@ function setupEventListeners() {
     });
   }
   
-  const tabVacancies = document.getElementById('tabVacancies');
-  const tabResumes = document.getElementById('tabResumes');
-  
-  if (tabVacancies) {
-    tabVacancies.addEventListener('click', () => setSearchType('vacancies'));
-  }
-  
-  if (tabResumes) {
-    tabResumes.addEventListener('click', () => {
-      if (!isAuthenticated) {
-        showErrors(['Для поиска резюме необходима авторизация работодателя']);
-        return;
-      }
-      setSearchType('resumes');
-    });
-  }
-  
   const filterToggle = document.getElementById('filterToggle');
   const filtersAdvanced = document.getElementById('filtersAdvanced');
   
@@ -177,6 +157,14 @@ function setSearchType(type) {
   if (exportSection) {
     exportSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
   }
+}
+
+function handleResumeTabClick() {
+  if (!isAuthenticated) {
+    showErrors(['Для поиска резюме необходима авторизация работодателя. Нажмите "Войти через HH.ru"']);
+    return;
+  }
+  setSearchType('resumes');
 }
 
 async function search() {
