@@ -218,8 +218,12 @@ async function loadDictionaries() {
     }
     
     if (rolesRes.ok) {
-      dictionaries.professional_roles = await rolesRes.json();
+      const rolesData = await rolesRes.json();
+      console.log('Professional roles data:', rolesData);
+      dictionaries.professional_roles = rolesData;
       populateProfessionalRoles();
+    } else {
+      console.error('Failed to load professional roles:', rolesRes.status, rolesRes.statusText);
     }
   } catch (error) {
     console.error('Load dictionaries error:', error);
@@ -228,28 +232,40 @@ async function loadDictionaries() {
 
 function populateProfessionalRoles() {
   const roleList = document.getElementById('roleList');
-  if (!roleList || !dictionaries.professional_roles) return;
+  if (!roleList) {
+    console.error('roleList element not found');
+    return;
+  }
+  
+  if (!dictionaries.professional_roles) {
+    console.error('professional_roles not loaded');
+    return;
+  }
+  
+  console.log('Populating roles, data:', dictionaries.professional_roles);
   
   roleList.innerHTML = '';
   
   let allRoles = [];
   
-  // API возвращает массив категорий, каждая со вложенным массивом roles
-  const categories = dictionaries.professional_roles;
+  // API возвращает { categories: [...] }
+  const data = dictionaries.professional_roles;
+  const categories = data.categories || data;
   
   if (Array.isArray(categories)) {
     categories.forEach(category => {
       const roles = category.roles || category.industry_roles || [];
+      const categoryName = category.name || category.industry_name || '';
+      
       if (roles.length > 0) {
         roles.forEach(role => {
           allRoles.push({
             id: role.id,
             name: role.name,
-            category: category.name || category.industry_name || ''
+            category: categoryName
           });
         });
       } else if (category.id && category.name) {
-        // Если роль без категории
         allRoles.push({
           id: category.id,
           name: category.name,
@@ -257,6 +273,13 @@ function populateProfessionalRoles() {
         });
       }
     });
+  }
+  
+  console.log('Total roles extracted:', allRoles.length);
+  
+  if (allRoles.length === 0) {
+    roleList.innerHTML = '<div style="padding: 12px; color: var(--text-secondary);">Нет данных о профессиях</div>';
+    return;
   }
   
   // Сортировка по имени категории, затем по имени роли
