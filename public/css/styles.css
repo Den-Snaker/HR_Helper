@@ -237,33 +237,46 @@ header h1 {
 
 .tabs {
   display: flex;
-  gap: 0;
+  gap: 4px;
   margin-bottom: 0;
-  border-bottom: none;
+  border-bottom: 2px solid var(--border-light);
 }
 
 .tab {
   padding: 12px 24px;
   background: var(--bg-tertiary);
-  border: none;
+  border: 2px solid transparent;
   border-radius: 12px 12px 0 0;
   cursor: pointer;
   font-size: 14px;
   font-weight: 500;
   transition: all 0.2s;
   color: var(--text-secondary);
+  position: relative;
 }
 
 .tab.active {
   background: var(--bg-secondary);
   color: var(--accent);
+  font-weight: 600;
+  border: 2px solid var(--accent);
+  border-bottom: none;
   box-shadow: var(--shadow);
-  border: 1px solid var(--border-color);
-  border-bottom: 1px solid var(--bg-secondary);
+}
+
+.tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--bg-secondary);
 }
 
 .tab:hover:not(.active) {
   background: var(--border-light);
+  border-color: var(--border-light);
 }
 
 .tab:disabled {
