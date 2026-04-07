@@ -75,6 +75,9 @@ router.get('/resumes', checkAuth, async (req, res) => {
       education: req.query.education,
       employment: req.query.employment,
       professional_role: req.query.professional_role,
+      label: req.query.label,
+      only_with_salary: req.query.only_with_salary,
+      order_by: req.query.order_by,
       page: parseInt(req.query.page) || 0,
       per_page: parseInt(req.query.per_page) || 20
     };

@@ -80,7 +80,22 @@ class HHApi {
     if (params.gender) queryParams.append('gender', params.gender);
     if (params.education) queryParams.append('education', params.education);
     if (params.employment) queryParams.append('employment', params.employment);
-    if (params.professional_role) queryParams.append('professional_role', params.professional_role);
+    if (params.professional_role) {
+      if (Array.isArray(params.professional_role)) {
+        params.professional_role.forEach(r => queryParams.append('professional_role', r));
+      } else {
+        queryParams.append('professional_role', params.professional_role);
+      }
+    }
+    if (params.label) {
+      if (Array.isArray(params.label)) {
+        params.label.forEach(l => queryParams.append('label', l));
+      } else {
+        queryParams.append('label', params.label);
+      }
+    }
+    if (params.only_with_salary) queryParams.append('only_with_salary', 'true');
+    if (params.order_by) queryParams.append('order_by', params.order_by);
     if (params.page !== undefined) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
     

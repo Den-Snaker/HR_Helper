@@ -12,7 +12,8 @@ const dictionaries = {
   schedules: [],
   experiences: [],
   employments: [],
-  areas: []
+  areas: [],
+  professional_roles: []
 };
 
 const popularAreas = [
@@ -187,9 +188,10 @@ function updateUsageIndicator(stats) {
 
 async function loadDictionaries() {
   try {
-    const [areasRes, dictsRes] = await Promise.all([
+    const [areasRes, dictsRes, rolesRes] = await Promise.all([
       fetch(`${API_BASE}/api/dictionaries/areas`),
-      fetch(`${API_BASE}/api/dictionaries`)
+      fetch(`${API_BASE}/api/dictionaries`),
+      fetch(`${API_BASE}/api/dictionaries/professional_roles`)
     ]);
     
     if (areasRes.ok) {
@@ -203,9 +205,38 @@ async function loadDictionaries() {
       dictionaries.experiences = dicts.experience || [];
       dictionaries.employments = dicts.employment || [];
     }
+    
+    if (rolesRes.ok) {
+      dictionaries.professional_roles = await rolesRes.json();
+      populateProfessionalRoles();
+    }
   } catch (error) {
     console.error('Load dictionaries error:', error);
   }
+}
+
+function populateProfessionalRoles() {
+  const select = document.getElementById('professionalRole');
+  if (!select || !dictionaries.professional_roles) return;
+  
+  select.innerHTML = '<option value="">Все профессии</option>';
+  
+  const roles = dictionaries.professional_roles.professional_roles || dictionaries.professional_roles || [];
+  
+  roles.forEach(category => {
+    const optgroup = document.createElement('optgroup');
+    optgroup.label = category.name || category.industry_name || 'Категория';
+    
+    const items = category.roles || category.industry_roles || [category];
+    items.forEach(role => {
+      const opt = document.createElement('option');
+      opt.value = role.id;
+      opt.textContent = role.name;
+      optgroup.appendChild(opt);
+    });
+    
+    select.appendChild(optgroup);
+  });
 }
 
 function populateAreasSelect() {
@@ -397,6 +428,17 @@ function setSearchType(type) {
   if (exportSection) {
     exportSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
   }
+  
+  // Показываем/скрываем фильтры только для резюме
+  const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
+  const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
+  
+  if (resumeOnlyFilters) {
+    resumeOnlyFilters.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+  if (resumeOnlyCheckboxes) {
+    resumeOnlyCheckboxes.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
 }
 
 function handleResumeTabClick() {
@@ -479,11 +521,17 @@ function getSearchParams() {
     const ageTo = document.getElementById('ageTo')?.value;
     const gender = document.getElementById('gender')?.value;
     const education = document.getElementById('education')?.value;
+    const professionalRole = document.getElementById('professionalRole')?.value;
+    const orderBy = document.getElementById('orderBy')?.value;
+    const notFromAgency = document.getElementById('notFromAgency')?.checked;
     
     if (ageFrom) params.append('age_from', ageFrom);
     if (ageTo) params.append('age_to', ageTo);
     if (gender) params.append('gender', gender);
     if (education) params.append('education', education);
+    if (professionalRole) params.append('professional_role', professionalRole);
+    if (orderBy) params.append('order_by', orderBy);
+    if (notFromAgency) params.append('label', 'not_from_agency');
   }
   
   return params;
