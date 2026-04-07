@@ -17,7 +17,9 @@ const dictionaries = {
 
 const popularAreas = [
   { id: '1', name: 'Москва' },
+  { id: '2019', name: 'Московская область' },
   { id: '2', name: 'Санкт-Петербург' },
+  { id: '2014', name: 'Ленинградская область' },
   { id: '4', name: 'Новосибирск' },
   { id: '40', name: 'Екатеринбург' },
   { id: '25', name: 'Казань' },
@@ -35,8 +37,26 @@ const popularAreas = [
   { id: '104', name: 'Пермь' },
   { id: '73', name: 'Омск' },
   { id: '43', name: 'Тюмень' },
+  { id: '1662', name: 'Тверская область' },
+  { id: '1672', name: 'Ярославская область' },
+  { id: '1679', name: 'Владимирская область' },
+  { id: '1691', name: 'Рязанская область' },
+  { id: '1698', name: 'Тульская область' },
+  { id: '1686', name: 'Калужская область' },
+  { id: '1654', name: 'Смоленская область' },
   { id: '99', name: 'Другие регионы' }
 ];
+
+const areaPresets = {
+  moscowRegion: {
+    name: 'Москва и Московская область',
+    areas: ['1', '2019']
+  },
+  moscowArea: {
+    name: 'Москва, область и соседние регионы',
+    areas: ['1', '2019', '1662', '1672', '1679', '1691', '1698', '1686', '1654']
+  }
+};
 
 function initTheme() {
   const savedTheme = localStorage.getItem('theme');
@@ -169,7 +189,44 @@ function populateAreasDropdown() {
     areaList.appendChild(div);
   });
   
+  sortAreasBySelected();
   updateAreasHeaderText();
+}
+
+function sortAreasBySelected() {
+  const areaList = document.getElementById('areaList');
+  if (!areaList) return;
+  
+  const items = Array.from(areaList.querySelectorAll('.area-item'));
+  const selectedIds = selectedAreas.map(a => a.id);
+  
+  items.sort((a, b) => {
+    const aSelected = selectedIds.includes(a.dataset.id);
+    const bSelected = selectedIds.includes(b.dataset.id);
+    if (aSelected && !bSelected) return -1;
+    if (!aSelected && bSelected) return 1;
+    return 0;
+  });
+  
+  items.forEach(item => areaList.appendChild(item));
+}
+
+function applyAreaPreset(presetKey) {
+  const preset = areaPresets[presetKey];
+  if (!preset) return;
+  
+  // Clear all first
+  clearAllAreas();
+  
+  // Select preset areas
+  preset.areas.forEach(areaId => {
+    const checkbox = document.getElementById(`area_${areaId}`);
+    if (checkbox) {
+      checkbox.checked = true;
+    }
+  });
+  
+  updateSelectedAreas();
 }
 
 function toggleAreaDropdown() {
@@ -225,6 +282,7 @@ function updateSelectedAreas() {
     name: cb.parentElement.querySelector('label').textContent
   }));
   
+  sortAreasBySelected();
   updateAreasHeaderText();
 }
 

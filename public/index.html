@@ -45,6 +45,10 @@
                     </div>
                     <div class="form-group">
                         <label>Регионы <span id="selectedAreasCount" class="areas-count"></span></label>
+                        <div class="area-presets">
+                            <button type="button" class="preset-btn" onclick="applyAreaPreset('moscowRegion')">Москва и МО</button>
+                            <button type="button" class="preset-btn" onclick="applyAreaPreset('moscowArea')">Москва и соседние регионы</button>
+                        </div>
                         <div class="area-select-container">
                             <div class="area-select-header" id="areaSelectHeader" onclick="toggleAreaDropdown()">
                                 <span id="areaSelectText">Все регионы</span>
