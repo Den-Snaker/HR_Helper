@@ -13,7 +13,36 @@ const dictionaries = {
   areas: []
 };
 
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme');
+  if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    updateThemeIcon(true);
+  }
+}
+
+function toggleTheme() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  if (isDark) {
+    document.documentElement.removeAttribute('data-theme');
+    localStorage.setItem('theme', 'light');
+    updateThemeIcon(false);
+  } else {
+    document.documentElement.setAttribute('data-theme', 'dark');
+    localStorage.setItem('theme', 'dark');
+    updateThemeIcon(true);
+  }
+}
+
+function updateThemeIcon(isDark) {
+  const icon = document.getElementById('themeIcon');
+  if (icon) {
+    icon.textContent = isDark ? '☀️' : '🌙';
+  }
+}
+
 async function init() {
+  initTheme();
   await checkAuthStatus();
   await loadDictionaries();
   setupEventListeners();

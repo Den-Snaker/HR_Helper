@@ -11,6 +11,9 @@
         <div class="container">
             <h1>HR Helper</h1>
             <div class="auth-info">
+                <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+                    <span id="themeIcon">🌙</span>
+                </button>
                 <div id="userInfo" class="user-info" style="display: none;"></div>
                 <button id="loginBtn" class="btn btn-secondary" onclick="login()">Войти через HH.ru</button>
                 <button id="logoutBtn" class="btn" style="display: none;" onclick="logout()">Выйти</button>
