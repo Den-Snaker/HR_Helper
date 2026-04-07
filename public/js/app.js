@@ -242,14 +242,18 @@ function getSearchParams() {
   const area = document.getElementById('area')?.value;
   const schedule = document.getElementById('schedule')?.value;
   const experience = document.getElementById('experience')?.value;
-  const salary = document.getElementById('salary')?.value;
+  const salaryFrom = document.getElementById('salaryFrom')?.value;
+  const salaryTo = document.getElementById('salaryTo')?.value;
+  const currency = document.getElementById('currency')?.value || 'RUR';
   const perPage = document.getElementById('perPage')?.value || '20';
   
   if (keywords) params.append('text', keywords);
   if (area) params.append('area', area);
   if (schedule) params.append('schedule', schedule);
   if (experience) params.append('experience', experience);
-  if (salary) params.append('salary_from', salary);
+  if (salaryFrom) params.append('salary_from', salaryFrom);
+  if (salaryTo) params.append('salary_to', salaryTo);
+  if (currency) params.append('currency', currency);
   params.append('page', currentPage);
   params.append('per_page', perPage);
   

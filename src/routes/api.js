@@ -13,6 +13,8 @@ router.get('/vacancies', async (req, res) => {
       schedule: req.query.schedule,
       experience: req.query.experience,
       salary_from: req.query.salary_from,
+      salary_to: req.query.salary_to,
+      currency: req.query.currency,
       employment: req.query.employment,
       page: parseInt(req.query.page) || 0,
       per_page: parseInt(req.query.per_page) || 20
@@ -54,6 +56,8 @@ router.get('/resumes', async (req, res) => {
       schedule: req.query.schedule,
       experience: req.query.experience,
       salary_from: req.query.salary_from,
+      salary_to: req.query.salary_to,
+      currency: req.query.currency,
       age_from: req.query.age_from,
       age_to: req.query.age_to,
       gender: req.query.gender,

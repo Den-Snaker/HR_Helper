@@ -44,6 +44,8 @@ class HHApi {
     if (params.schedule) queryParams.append('schedule', params.schedule);
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
+    if (params.salary_to) queryParams.append('salary_to', params.salary_to);
+    if (params.currency) queryParams.append('currency', params.currency);
     if (params.employment) queryParams.append('employment', params.employment);
     if (params.page !== undefined) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
@@ -59,6 +61,8 @@ class HHApi {
     if (params.schedule) queryParams.append('schedule', params.schedule);
     if (params.experience) queryParams.append('experience', params.experience);
     if (params.salary_from) queryParams.append('salary_from', params.salary_from);
+    if (params.salary_to) queryParams.append('salary_to', params.salary_to);
+    if (params.currency) queryParams.append('currency', params.currency);
     if (params.age_from) queryParams.append('age_from', params.age_from);
     if (params.age_to) queryParams.append('age_to', params.age_to);
     if (params.gender) queryParams.append('gender', params.gender);
