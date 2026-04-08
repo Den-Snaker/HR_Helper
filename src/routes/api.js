@@ -83,7 +83,10 @@ router.get('/resumes', checkAuth, async (req, res) => {
       per_page: parseInt(req.query.per_page) || 20
     };
 
-    console.log('Resume search params received:', JSON.stringify(params, null, 2));
+    console.log('=== Resume Search Request ===');
+    console.log('Raw query.area:', req.query.area);
+    console.log('Query area type:', typeof req.query.area, 'isArray:', Array.isArray(req.query.area));
+    console.log('Full params object:', JSON.stringify(params, null, 2));
 
     const data = await hhApi.searchResumes(params);
     

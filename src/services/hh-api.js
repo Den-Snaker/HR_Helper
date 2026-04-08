@@ -74,6 +74,12 @@ class HHApi {
   async searchResumes(params) {
     const queryParams = new URLSearchParams();
     
+    console.log('=== searchResumes called with params ===');
+    console.log('params.area:', params.area, 'isArray:', Array.isArray(params.area));
+    console.log('params.schedule:', params.schedule, 'isArray:', Array.isArray(params.schedule));
+    console.log('params.experience:', params.experience, 'isArray:', Array.isArray(params.experience));
+    console.log('params.employer_industry:', params.employer_industry, 'isArray:', Array.isArray(params.employer_industry));
+    
     if (params.text) queryParams.append('text', params.text);
     if (params.area) {
       if (Array.isArray(params.area)) {
@@ -130,9 +136,15 @@ class HHApi {
     if (params.page !== undefined) queryParams.append('page', params.page);
     if (params.per_page) queryParams.append('per_page', params.per_page);
     
-    console.log('HH API resume search URL:', `/resumes?${queryParams.toString()}`);
+    const finalUrl = `/resumes?${queryParams.toString()}`;
+    console.log('=== HH API Final Request ===');
+    console.log('URL:', finalUrl);
+    console.log('Area params in URL:', (finalUrl.match(/area=/g) || []).length);
+    console.log('Schedule params in URL:', (finalUrl.match(/schedule=/g) || []).length);
+    console.log('Experience params in URL:', (finalUrl.match(/experience=/g) || []).length);
+    console.log('employer_industry in URL:', finalUrl.includes('employer_industry'));
     
-    return this.request(`/resumes?${queryParams.toString()}`);
+    return this.request(finalUrl);
   }
 
   async getResume(id) {
