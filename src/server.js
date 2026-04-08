@@ -8,6 +8,16 @@ const apiRoutes = require('./routes/api');
 const app = express();
 
 app.use(express.json());
+
+// Request logging middleware
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/')) {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+    console.log('Query params:', req.query);
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/auth', authRoutes);
