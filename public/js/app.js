@@ -149,6 +149,7 @@ function updateAuthUI() {
   const authRequired = document.getElementById('authRequired');
   const userInfo = document.getElementById('userInfo');
   const settingsBtn = document.getElementById('settingsBtn');
+  const aiSettingsBtn = document.getElementById('aiSettingsBtn');
   const usageIndicator = document.getElementById('usageIndicator');
   
   if (isAuthenticated) {
@@ -157,6 +158,7 @@ function updateAuthUI() {
     if (authRequired) authRequired.style.display = 'none';
     if (userInfo) userInfo.style.display = 'block';
     if (settingsBtn) settingsBtn.style.display = 'inline-flex';
+    if (aiSettingsBtn) aiSettingsBtn.style.display = 'inline-flex';
     if (usageIndicator) usageIndicator.style.display = 'flex';
     loadUsageStats();
   } else {
@@ -165,6 +167,7 @@ function updateAuthUI() {
     if (authRequired) authRequired.style.display = 'block';
     if (userInfo) userInfo.style.display = 'none';
     if (settingsBtn) settingsBtn.style.display = 'none';
+    if (aiSettingsBtn) aiSettingsBtn.style.display = 'none';
     if (usageIndicator) usageIndicator.style.display = 'none';
   }
 }
@@ -895,6 +898,11 @@ function setSearchType(type) {
     exportSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
   }
   
+  const aiSection = document.getElementById('aiSection');
+  if (aiSection) {
+    aiSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
+  }
+  
   // Показываем/скрываем фильтры только для резюме
   const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
   const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
@@ -1475,6 +1483,144 @@ function closeModal() {
     modal.classList.remove('open');
     setTimeout(() => modal.remove(), 300);
   });
+}
+
+// AI Analysis
+let aiAnalysisResults = [];
+
+function setSearchType(type) {
+  currentSearchType = type;
+  currentPage = 0;
+  
+  const tabVacancies = document.getElementById('tabVacancies');
+  const tabResumes = document.getElementById('tabResumes');
+  
+  if (tabVacancies && tabResumes) {
+    tabVacancies.classList.toggle('active', type === 'vacancies');
+    tabResumes.classList.toggle('active', type === 'resumes');
+  }
+  
+  const results = document.getElementById('results');
+  if (results) results.innerHTML = '';
+  
+  const exportSection = document.getElementById('exportSection');
+  if (exportSection) {
+    exportSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
+  }
+  
+  const aiSection = document.getElementById('aiSection');
+  if (aiSection) {
+    aiSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
+  }
+  
+  // Показываем/скрываем фильтры только для резюме
+  const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
+  const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
+  const resumeOnlyIndustry = document.getElementById('resumeOnlyIndustry');
+  
+  if (resumeOnlyFilters) {
+    resumeOnlyFilters.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+  if (resumeOnlyCheckboxes) {
+    resumeOnlyCheckboxes.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+  if (resumeOnlyIndustry) {
+    resumeOnlyIndustry.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+}
+
+async function startAIAnalysis() {
+  if (!currentItems || currentItems.length === 0) {
+    showErrors(['Нет результатов поиска для анализа. Сначала выполните поиск.']);
+    return;
+  }
+  
+  const statusEl = document.getElementById('aiStatus');
+  const resultsEl = document.getElementById('aiResults');
+  const btn = document.getElementById('aiAnalyzeBtn');
+  
+  btn.disabled = true;
+  statusEl.textContent = 'Проверка настроек AI...';
+  resultsEl.innerHTML = '';
+  
+  try {
+    const settingsRes = await fetch(`${API_BASE}/api/ai/settings`);
+    const aiSettings = await settingsRes.json();
+    
+    if (!aiSettings.enabled || !aiSettings.apiKey) {
+      statusEl.textContent = '';
+      showErrors(['AI анализ не настроен. Перейдите в <a href="/ai-settings.html" style="color: var(--accent);">настройки AI</a> для конфигурации.']);
+      btn.disabled = false;
+      return;
+    }
+    
+    const resumeIds = currentItems.map(item => item.id);
+    const maxResumes = aiSettings.maxResumes || 20;
+    
+    statusEl.textContent = `Анализ ${Math.min(resumeIds.length, maxResumes)} резюме...`;
+    
+    const response = await fetch(`${API_BASE}/api/ai/analyze-resumes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resumeIds })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Ошибка анализа');
+    }
+    
+    const data = await response.json();
+    aiAnalysisResults = data.results;
+    
+    statusEl.textContent = `Проанализировано ${data.analyzed} из ${data.total} резюме`;
+    
+    renderAIResults(data.results);
+    
+  } catch (error) {
+    statusEl.textContent = '';
+    showErrors(['Ошибка AI анализа: ' + error.message]);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderAIResults(results) {
+  const resultsEl = document.getElementById('aiResults');
+  
+  if (results.length === 0) {
+    resultsEl.innerHTML = '<p style="color: var(--text-secondary);">Нет результатов анализа</p>';
+    return;
+  }
+  
+  let html = '';
+  
+  results.forEach((result, index) => {
+    const score = result.analysis.score;
+    const scoreClass = score >= 80 ? 'excellent' : score >= 60 ? 'good' : score >= 40 ? 'average' : 'poor';
+    
+    html += `
+      <div class="ai-analysis-card">
+        <div style="display: flex; align-items: flex-start;">
+          <div class="ai-score ${scoreClass}">${score}</div>
+          <div class="ai-details">
+            <div style="font-weight: 600; font-size: 16px;">${result.resume?.title || 'Без названия'}</div>
+            <div style="color: var(--text-secondary); margin-top: 4px;">
+              ${result.resume?.name || 'Имя не указано'} ${result.resume?.age ? `, ${result.resume.age} лет` : ''}
+              ${result.resume?.area ? ` • ${result.resume.area}` : ''}
+            </div>
+            <div style="margin-top: 8px;">
+              <span class="tag">Опыт: ${result.analysis.experience_score}/10</span>
+              <span class="tag">Навыки: ${result.analysis.skills_score}/10</span>
+            </div>
+            ${result.analysis.recommendation ? `<div style="margin-top: 8px; font-style: italic; color: var(--text-secondary);">"${result.analysis.recommendation}"</div>` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+  });
+  
+  resultsEl.innerHTML = html;
 }
 
 document.addEventListener('DOMContentLoaded', init);

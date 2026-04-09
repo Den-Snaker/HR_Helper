@@ -2,6 +2,7 @@ const express = require('express');
 const hhApi = require('../services/hh-api');
 const tokenManager = require('../services/token-manager');
 const settingsManager = require('../services/settings-manager');
+const aiService = require('../services/ai-service');
 const { exportToExcel } = require('../utils/excel-export');
 
 const router = express.Router();
@@ -327,6 +328,137 @@ router.post('/export', checkAuth, async (req, res) => {
     res.send(buffer);
   } catch (error) {
     console.error('Export error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/ai/settings', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const aiSettings = settingsManager.getAISettings(userId);
+    res.json(aiSettings);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/ai/settings', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const aiSettings = await settingsManager.updateAISettings(userId, req.body);
+    res.json({ success: true, aiSettings });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/ai/providers', checkAuth, async (req, res) => {
+  try {
+    const providers = aiService.getProviders();
+    res.json(providers);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/ai/default-prompt', checkAuth, async (req, res) => {
+  try {
+    const prompt = aiService.getDefaultPrompt();
+    res.json({ prompt });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/ai/analyze-resume/:resumeId', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const resumeId = req.params.resumeId;
+    
+    const aiSettings = settingsManager.getAISettings(userId);
+    
+    if (!aiSettings.enabled || !aiSettings.apiKey) {
+      return res.status(400).json({ error: 'AI analysis not configured' });
+    }
+    
+    const resume = await hhApi.getResume(resumeId);
+    const resumeText = aiService.formatResumeForAnalysis(resume);
+    
+    const analysis = await aiService.analyzeResume(aiSettings, resumeText);
+    
+    res.json({
+      resumeId,
+      analysis,
+      resume: {
+        title: resume.title,
+        name: `${resume.first_name || ''} ${resume.last_name || ''}`.trim(),
+        age: resume.age,
+        area: resume.area?.name
+      }
+    });
+  } catch (error) {
+    console.error('AI analysis error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/ai/analyze-resumes', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const { resumeIds } = req.body;
+    
+    if (!resumeIds || !Array.isArray(resumeIds) || resumeIds.length === 0) {
+      return res.status(400).json({ error: 'No resume IDs provided' });
+    }
+    
+    const aiSettings = settingsManager.getAISettings(userId);
+    
+    if (!aiSettings.enabled || !aiSettings.apiKey) {
+      return res.status(400).json({ error: 'AI analysis not configured' });
+    }
+    
+    const maxResumes = aiSettings.maxResumes || 20;
+    const idsToAnalyze = resumeIds.slice(0, maxResumes);
+    
+    const results = [];
+    
+    for (const resumeId of idsToAnalyze) {
+      try {
+        const resume = await hhApi.getResume(resumeId);
+        const resumeText = aiService.formatResumeForAnalysis(resume);
+        const analysis = await aiService.analyzeResume(aiSettings, resumeText);
+        
+        results.push({
+          resumeId,
+          analysis,
+          resume: {
+            title: resume.title,
+            name: `${resume.first_name || ''} ${resume.last_name || ''}`.trim(),
+            age: resume.age,
+            area: resume.area?.name,
+            salary: resume.salary
+          }
+        });
+      } catch (error) {
+        console.error(`Failed to analyze resume ${resumeId}:`, error);
+        results.push({
+          resumeId,
+          error: error.message
+        });
+      }
+    }
+    
+    const successfulResults = results.filter(r => !r.error);
+    const sortedResults = successfulResults.sort((a, b) => b.analysis.score - a.analysis.score);
+    
+    res.json({
+      total: idsToAnalyze.length,
+      analyzed: successfulResults.length,
+      failed: results.filter(r => r.error).length,
+      results: sortedResults
+    });
+  } catch (error) {
+    console.error('AI batch analysis error:', error);
     res.status(500).json({ error: error.message });
   }
 });

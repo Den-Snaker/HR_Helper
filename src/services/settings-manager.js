@@ -46,7 +46,16 @@ class SettingsManager {
       contactUsageToday: 0,
       viewCountToday: 0,
       lastReset: new Date().toISOString().split('T')[0],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      aiSettings: {
+        enabled: false,
+        provider: null,
+        apiKey: null,
+        model: null,
+        prompt: null,
+        maxResumes: 20,
+        requirements: null
+      }
     };
   }
 
@@ -239,6 +248,27 @@ class SettingsManager {
     this.saveUserSettings(userId, settings);
     
     return { cleared: files.length };
+  }
+
+  getAISettings(userId) {
+    const settings = this.getUserSettings(userId);
+    return settings.aiSettings || this.getDefaultSettings().aiSettings;
+  }
+
+  updateAISettings(userId, aiSettings) {
+    const settings = this.getUserSettings(userId);
+    
+    settings.aiSettings = {
+      enabled: aiSettings.enabled !== undefined ? aiSettings.enabled : settings.aiSettings?.enabled || false,
+      provider: aiSettings.provider || settings.aiSettings?.provider || null,
+      apiKey: aiSettings.apiKey !== undefined ? aiSettings.apiKey : settings.aiSettings?.apiKey || null,
+      model: aiSettings.model || settings.aiSettings?.model || null,
+      prompt: aiSettings.prompt !== undefined ? aiSettings.prompt : settings.aiSettings?.prompt || null,
+      maxResumes: parseInt(aiSettings.maxResumes) || 20,
+      requirements: aiSettings.requirements !== undefined ? aiSettings.requirements : settings.aiSettings?.requirements || null
+    };
+    
+    return this.saveUserSettings(userId, settings);
   }
 }
 

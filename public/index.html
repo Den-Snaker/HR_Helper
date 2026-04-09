@@ -14,6 +14,7 @@
                 <div id="usageIndicator" class="usage-indicator" style="display: none;" title="Открыто контактов сегодня">
                     <span id="usageCount">0</span>/<span id="usageLimit">10</span>
                 </div>
+                <a href="/ai-settings.html" class="btn btn-settings" id="aiSettingsBtn" style="display: none;" title="AI настройки">🤖</a>
                 <a href="/settings.html" class="btn btn-settings" id="settingsBtn" style="display: none;" title="Настройки">⚙️</a>
                 <button id="themeToggle" class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
                     <span id="themeIcon">🌙</span>
@@ -284,6 +285,14 @@
         <div id="exportSection" class="export-section" style="display: none;">
             <h3>📁 Экспорт результатов</h3>
             <button class="btn btn-primary" id="exportBtn">Скачать Excel</button>
+        </div>
+
+        <div id="aiSection" class="ai-section" style="display: none;">
+            <h3>🤖 AI анализ резюме</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 12px;">Проанализировать TOP резюме с помощью AI и отсортировать по соответствию</p>
+            <button class="btn btn-primary" id="aiAnalyzeBtn" onclick="startAIAnalysis()">▶ Запустить AI анализ</button>
+            <span id="aiStatus" style="margin-left: 12px; color: var(--text-secondary);"></span>
+            <div id="aiResults" style="margin-top: 16px;"></div>
         </div>
 
         <div id="results"></div>
