@@ -6,22 +6,48 @@ class AIService {
       deepseek: {
         name: 'DeepSeek',
         baseUrl: 'https://api.deepseek.com/v1',
-        models: ['deepseek-chat', 'deepseek-coder']
+        models: ['deepseek-chat', 'deepseek-coder', 'glm-5', 'glm-5.1', 'glm-5-turbo']
       },
       openrouter: {
         name: 'OpenRouter',
         baseUrl: 'https://openrouter.ai/api/v1',
-        models: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'deepseek/deepseek-chat', 'google/gemini-pro']
+        models: [
+          'openai/gpt-4o', 
+          'anthropic/claude-3.5-sonnet', 
+          'deepseek/deepseek-chat', 
+          'google/gemini-pro',
+          'glm-5',
+          'glm-5.1',
+          'glm-5-turbo',
+          'z-ai/glm-5.1',
+          'qwen/qwen3.6-plus',
+          'z-ai/glm-5v-turbo',
+          'openai/gpt-5.4-mini',
+          'google/gemini-3-flash-preview',
+          'anthropic/claude-haiku-4.5'
+        ]
       },
       zai: {
         name: 'Z.AI',
         baseUrl: 'https://api.z.ai/v1',
-        models: ['z-1-mini', 'z-1-standard', 'z-1-large']
+        models: ['z-1-mini', 'z-1-standard', 'z-1-large', 'glm-5', 'glm-5.1', 'glm-5-turbo']
       },
       ollama: {
         name: 'Ollama Cloud',
         baseUrl: 'https://api.ollama.cloud/v1',
-        models: ['llama3.1', 'llama3.1:70b', 'mistral', 'codellama', 'qwen2.5']
+        models: [
+          'llama3.1', 
+          'llama3.1:70b', 
+          'mistral', 
+          'codellama', 
+          'qwen2.5',
+          'glm-5',
+          'glm-5.1',
+          'glm-5-turbo',
+          'qwen3.5',
+          'minimax-m2.7',
+          'gemini-3-flash-preview'
+        ]
       }
     };
   }
