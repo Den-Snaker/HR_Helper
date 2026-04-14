@@ -1567,47 +1567,6 @@ function closeModal() {
 // AI Analysis
 let aiAnalysisResults = [];
 
-function setSearchType(type) {
-  currentSearchType = type;
-  currentPage = 0;
-  
-  const tabVacancies = document.getElementById('tabVacancies');
-  const tabResumes = document.getElementById('tabResumes');
-  
-  if (tabVacancies && tabResumes) {
-    tabVacancies.classList.toggle('active', type === 'vacancies');
-    tabResumes.classList.toggle('active', type === 'resumes');
-  }
-  
-  const results = document.getElementById('results');
-  if (results) results.innerHTML = '';
-  
-  const exportSection = document.getElementById('exportSection');
-  if (exportSection) {
-    exportSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
-  }
-  
-  const aiSection = document.getElementById('aiSection');
-  if (aiSection) {
-    aiSection.style.display = type === 'resumes' && isAuthenticated ? 'block' : 'none';
-  }
-  
-  // Показываем/скрываем фильтры только для резюме
-  const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
-  const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
-  const resumeOnlyIndustry = document.getElementById('resumeOnlyIndustry');
-  
-  if (resumeOnlyFilters) {
-    resumeOnlyFilters.style.display = type === 'resumes' ? 'grid' : 'none';
-  }
-  if (resumeOnlyCheckboxes) {
-    resumeOnlyCheckboxes.style.display = type === 'resumes' ? 'grid' : 'none';
-  }
-  if (resumeOnlyIndustry) {
-    resumeOnlyIndustry.style.display = type === 'resumes' ? 'grid' : 'none';
-  }
-}
-
 async function startAIAnalysis() {
   if (!currentItems || currentItems.length === 0) {
     showErrors(['Нет результатов поиска для анализа. Сначала выполните поиск.']);
