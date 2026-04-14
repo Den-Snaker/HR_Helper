@@ -421,6 +421,28 @@ router.get('/ai/default-prompt', checkAuth, async (req, res) => {
   }
 });
 
+router.post('/ai/test-connection', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const aiSettings = settingsManager.getAISettings(userId);
+    
+    if (!aiSettings.enabled || !aiSettings.apiKey) {
+      return res.status(400).json({ error: 'AI not configured. Enable AI and enter API key first.' });
+    }
+    
+    const result = await aiService.testConnection(aiSettings);
+    
+    if (result.success) {
+      res.json({ success: true, response: result.response });
+    } else {
+      res.status(400).json({ error: result.error || 'Connection test failed' });
+    }
+  } catch (error) {
+    console.error('AI test connection error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 router.post('/ai/analyze-resume/:resumeId', checkAuth, async (req, res) => {
   try {
     const userId = getUserId();

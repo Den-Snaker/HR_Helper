@@ -286,6 +286,29 @@ class AIService {
       models: config.models
     }));
   }
+
+  async testConnection(aiSettings) {
+    const { provider, apiKey, model } = aiSettings;
+
+    if (!provider || !apiKey || !model) {
+      throw new Error('Provider, API key and model are required');
+    }
+
+    const testPrompt = 'Ответь одним словом: OK';
+    const providerConfig = this.providers[provider];
+    
+    if (!providerConfig) {
+      throw new Error(`Unknown provider: ${provider}`);
+    }
+
+    try {
+      const result = await this.callProvider(provider, apiKey, model, testPrompt);
+      return { success: true, response: result };
+    } catch (error) {
+      console.error('AI connection test failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 module.exports = new AIService();

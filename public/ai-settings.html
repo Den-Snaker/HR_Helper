@@ -89,6 +89,7 @@
                     <button type="button" class="btn btn-primary" onclick="saveSettings()">💾 Сохранить настройки</button>
                     <button type="button" class="btn" onclick="testConnection()" style="margin-left: 8px;">🔍 Тест подключения</button>
                 </div>
+                <div id="testResult" style="margin-top: 16px;"></div>
             </div>
         </div>
         
@@ -202,7 +203,7 @@
             }
         }
         
-        async function saveSettings() {
+        async function saveSettings(silent = false) {
             try {
                 const settings = {
                     enabled: document.getElementById('aiEnabled').checked,
@@ -221,7 +222,8 @@
                 });
                 
                 if (response.ok) {
-                    showSuccess('Настройки сохранены');
+                    if (!silent) showSuccess('Настройки сохранены');
+                    return true;
                 } else {
                     const error = await response.json();
                     showError(error.error || 'Ошибка сохранения');
@@ -241,8 +243,41 @@
                 return;
             }
             
-            // Simple test - will be implemented with test endpoint
-            showSuccess('Проверка подключения... (функция в разработке)');
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            
+            try {
+                // Сначала сохраняем настройки
+                await saveSettings(true);
+                
+                // Затем тестируем подключение
+                const response = await fetch('/api/ai/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    resultDiv.innerHTML = `<div class="success-message">
+                        <h4>✅ Подключение успешно!</h4>
+                        <p>Провайдер: ${provider}</p>
+                        <p>Модель: ${model}</p>
+                        ${data.response ? `<p style="font-size: 12px; color: var(--text-secondary);">Ответ: ${data.response.substring(0, 200)}${data.response.length > 200 ? '...' : ''}</p>` : ''}
+                    </div>`;
+                } else {
+                    resultDiv.innerHTML = `<div class="error-message">
+                        <h4>❌ Ошибка подключения</h4>
+                        <p>${data.error || 'Неизвестная ошибка'}</p>
+                        ${data.details ? `<p style="font-size: 12px;">Детали: ${data.details}</p>` : ''}
+                    </div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error-message">
+                    <h4>❌ Ошибка</h4>
+                    <p>${error.message}</p>
+                </div>`;
+            }
         }
         
         async function testAnalyze() {
