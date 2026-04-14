@@ -907,6 +907,7 @@ function setSearchType(type) {
   const resumeOnlyFilters = document.getElementById('resumeOnlyFilters');
   const resumeOnlyCheckboxes = document.getElementById('resumeOnlyCheckboxes');
   const resumeOnlyIndustry = document.getElementById('resumeOnlyIndustry');
+  const vacancyOnlyCheckboxes = document.getElementById('vacancyOnlyCheckboxes');
   
   if (resumeOnlyFilters) {
     resumeOnlyFilters.style.display = type === 'resumes' ? 'grid' : 'none';
@@ -916,6 +917,9 @@ function setSearchType(type) {
   }
   if (resumeOnlyIndustry) {
     resumeOnlyIndustry.style.display = type === 'resumes' ? 'grid' : 'none';
+  }
+  if (vacancyOnlyCheckboxes) {
+    vacancyOnlyCheckboxes.style.display = type === 'vacancies' ? 'grid' : 'none';
   }
 }
 
@@ -1029,13 +1033,18 @@ function getSearchParams() {
   params.append('page', currentPage);
   params.append('per_page', perPage);
   
+  // Параметры только для вакансий
+  if (currentSearchType === 'vacancies') {
+    const notFromAgency = document.getElementById('notFromAgency')?.checked;
+    if (notFromAgency) params.append('label', 'not_from_recruitment_agency');
+  }
+  
   if (currentSearchType === 'resumes') {
     const ageFrom = document.getElementById('ageFrom')?.value;
     const ageTo = document.getElementById('ageTo')?.value;
     const gender = document.getElementById('gender')?.value;
     const education = document.getElementById('education')?.value;
     const orderBy = document.getElementById('orderBy')?.value;
-    const notFromAgency = document.getElementById('notFromAgency')?.checked;
     
     if (ageFrom) params.append('age_from', ageFrom);
     if (ageTo) params.append('age_to', ageTo);
@@ -1046,6 +1055,17 @@ function getSearchParams() {
         params.append('professional_role', role.id);
       });
     }
+    if (selectedIndustries.length > 0) {
+      console.log('Adding employer_industry params:', selectedIndustries);
+      selectedIndustries.forEach(industry => {
+        params.append('employer_industry', industry.id);
+      });
+    } else {
+      console.log('No industries selected');
+    }
+    if (orderBy) params.append('order_by', orderBy);
+    console.log('Search params for resumes:', params.toString());
+  }
     if (selectedIndustries.length > 0) {
       console.log('Adding employer_industry params:', selectedIndustries);
       selectedIndustries.forEach(industry => {
