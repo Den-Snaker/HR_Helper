@@ -336,6 +336,7 @@ router.post('/export-top5', checkAuth, async (req, res) => {
   try {
     const userId = getUserId();
     const { resumeIds } = req.body;
+    console.log('Export top5 request, userId:', userId, 'resumeIds:', resumeIds);
 
     if (!resumeIds || !Array.isArray(resumeIds) || resumeIds.length === 0) {
       return res.status(400).json({ error: 'No resume IDs provided' });
@@ -343,30 +344,42 @@ router.post('/export-top5', checkAuth, async (req, res) => {
 
     // Limit to 5 resumes
     const idsToExport = resumeIds.slice(0, 5);
+    console.log('Exporting resume IDs:', idsToExport);
     
     // Fetch detailed resume data for each
     const resumes = [];
+    const errors = [];
+    
     for (const resumeId of idsToExport) {
       try {
+        console.log(`Fetching resume ${resumeId}...`);
         const resume = await hhApi.getResume(resumeId);
+        console.log(`Resume ${resumeId} fetched successfully`);
         resumes.push(resume);
       } catch (error) {
-        console.error(`Failed to fetch resume ${resumeId}:`, error);
+        console.error(`Failed to fetch resume ${resumeId}:`, error.message);
+        errors.push({ resumeId, error: error.message });
       }
     }
 
     if (resumes.length === 0) {
-      return res.status(400).json({ error: 'Could not fetch any resumes' });
+      console.error('No resumes fetched, errors:', errors);
+      return res.status(400).json({ 
+        error: 'Could not fetch any resumes', 
+        details: errors 
+      });
     }
 
+    console.log(`Generating Excel for ${resumes.length} resumes...`);
     const buffer = await exportTop5Resumes(resumes);
+    console.log('Excel generated successfully');
     
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename=top5_resumes_${Date.now()}.xlsx`);
     res.send(buffer);
   } catch (error) {
     console.error('Export top5 error:', error);
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
