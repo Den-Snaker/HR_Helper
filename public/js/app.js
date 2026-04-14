@@ -1245,6 +1245,65 @@ async function exportToExcel() {
   }
 }
 
+async function exportTop5Resumes() {
+  if (!currentItems || currentItems.length === 0) {
+    showErrors(['Нет результатов поиска. Сначала выполните поиск.']);
+    return;
+  }
+  
+  if (currentSearchType !== 'resumes') {
+    showErrors(['Экспорт доступен только для резюме.']);
+    return;
+  }
+  
+  const top5 = currentItems.slice(0, 5);
+  
+  if (top5.length === 0) {
+    showErrors(['Нет резюме для экспорта.']);
+    return;
+  }
+  
+  const btn = document.getElementById('exportTop5Btn');
+  if (btn) btn.disabled = true;
+  
+  try {
+    showSuccess(`Загрузка ${top5.length} резюме...`);
+    
+    const resumeIds = top5.map(r => r.id);
+    
+    const response = await fetch(`${API_BASE}/api/export-top5`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({ resumeIds })
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Ошибка экспорта');
+    }
+    
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `top5_resumes_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    a.remove();
+    
+    showSuccess(`Экспортировано ${top5.length} резюме`);
+    
+  } catch (error) {
+    showErrors([error.message]);
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function showErrors(errors) {
   const errorDiv = document.getElementById('errors');
   if (!errorDiv) return;

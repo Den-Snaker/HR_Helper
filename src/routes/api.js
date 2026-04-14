@@ -3,7 +3,7 @@ const hhApi = require('../services/hh-api');
 const tokenManager = require('../services/token-manager');
 const settingsManager = require('../services/settings-manager');
 const aiService = require('../services/ai-service');
-const { exportToExcel } = require('../utils/excel-export');
+const { exportToExcel, exportTop5Resumes } = require('../utils/excel-export');
 
 const router = express.Router();
 
@@ -328,6 +328,44 @@ router.post('/export', checkAuth, async (req, res) => {
     res.send(buffer);
   } catch (error) {
     console.error('Export error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/export-top5', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const { resumeIds } = req.body;
+
+    if (!resumeIds || !Array.isArray(resumeIds) || resumeIds.length === 0) {
+      return res.status(400).json({ error: 'No resume IDs provided' });
+    }
+
+    // Limit to 5 resumes
+    const idsToExport = resumeIds.slice(0, 5);
+    
+    // Fetch detailed resume data for each
+    const resumes = [];
+    for (const resumeId of idsToExport) {
+      try {
+        const resume = await hhApi.getResume(resumeId);
+        resumes.push(resume);
+      } catch (error) {
+        console.error(`Failed to fetch resume ${resumeId}:`, error);
+      }
+    }
+
+    if (resumes.length === 0) {
+      return res.status(400).json({ error: 'Could not fetch any resumes' });
+    }
+
+    const buffer = await exportTop5Resumes(resumes);
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=top5_resumes_${Date.now()}.xlsx`);
+    res.send(buffer);
+  } catch (error) {
+    console.error('Export top5 error:', error);
     res.status(500).json({ error: error.message });
   }
 });

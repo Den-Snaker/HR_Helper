@@ -286,8 +286,14 @@
         </div>
 
         <div id="exportSection" class="export-section" style="display: none;">
-            <h3>📁 Экспорт результатов</h3>
-            <button class="btn btn-primary" id="exportBtn">Скачать Excel</button>
+            <h3>📊 Обработка результатов</h3>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="btn btn-primary" id="exportBtn">Скачать список в XLSX</button>
+                <button class="btn btn-secondary" id="exportTop5Btn" onclick="exportTop5Resumes()">📥 Скачать 5 верхних</button>
+            </div>
+            <p style="color: var(--text-secondary); font-size: 12px; margin-top: 8px;">
+                "Скачать 5 верхних" сохраняет подробную информацию по каждому резюме на отдельных листах + сводную таблицу
+            </p>
         </div>
 
         <div id="aiSection" class="ai-section" style="display: none;">
