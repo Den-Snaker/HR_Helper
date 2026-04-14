@@ -40,6 +40,7 @@
             <div class="tabs">
                 <button id="tabVacancies" class="tab active" onclick="setSearchType('vacancies')">Вакансии</button>
                 <button id="tabResumes" class="tab" onclick="handleResumeTabClick()">Резюме</button>
+                <button id="tabTemplates" class="tab" onclick="openTemplatesModal()">📋 Шаблоны</button>
             </div>
 
             <form id="searchForm" onsubmit="return false;">
@@ -310,6 +311,56 @@
             <button id="prevPage" onclick="prevPage()">← Назад</button>
             <span id="pageInfo">Страница 1 из 1</span>
             <button id="nextPage" onclick="nextPage()">Вперёд →</button>
+        </div>
+    </div>
+
+    <!-- Modal: Шаблоны поиска -->
+    <div id="templatesModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h2>📋 Шаблоны поиска</h2>
+                <button class="modal-close" onclick="closeTemplatesModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="templatesAuthRequired" style="display: none;">
+                    <p style="color: var(--text-secondary); text-align: center; padding: 20px;">
+                        Для работы с шаблонами необходимо <a href="#" onclick="login(); closeTemplatesModal();">войти через HH.ru</a>
+                    </p>
+                </div>
+                <div id="templatesContent">
+                    <!-- Сохранение нового шаблона -->
+                    <div class="template-section">
+                        <h3>💾 Сохранить текущий поиск</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="templateName" placeholder="Название шаблона" style="flex: 1;">
+                            <button class="btn btn-primary" onclick="saveTemplate()">Сохранить</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Список шаблонов -->
+                    <div class="template-section" style="margin-top: 20px;">
+                        <h3>📁 Мои шаблоны</h3>
+                        <div id="templatesList" style="max-height: 300px; overflow-y: auto;">
+                            <p style="color: var(--text-secondary); text-align: center;">Нет сохранённых шаблонов</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Переименование шаблона -->
+    <div id="renameTemplateModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>✏️ Переименовать шаблон</h2>
+                <button class="modal-close" onclick="closeRenameTemplateModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="renameTemplateName" placeholder="Новое название" style="width: 100%; margin-bottom: 16px;">
+                <input type="hidden" id="renameTemplateId">
+                <button class="btn btn-primary" onclick="confirmRenameTemplate()">Переименовать</button>
+            </div>
         </div>
     </div>
 

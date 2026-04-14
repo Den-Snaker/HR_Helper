@@ -270,6 +270,83 @@ class SettingsManager {
     
     return this.saveUserSettings(userId, settings);
   }
+
+  // Templates management
+  getTemplates(userId) {
+    const settings = this.getUserSettings(userId);
+    return settings.templates || [];
+  }
+
+  saveTemplate(userId, name, searchParams) {
+    const settings = this.getUserSettings(userId);
+    
+    if (!settings.templates) {
+      settings.templates = [];
+    }
+    
+    const template = {
+      id: Date.now().toString(36) + Math.random().toString(36).substr(2, 9),
+      name: name,
+      params: searchParams,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    settings.templates.push(template);
+    this.saveUserSettings(userId, settings);
+    
+    return template;
+  }
+
+  updateTemplate(userId, templateId, name, searchParams) {
+    const settings = this.getUserSettings(userId);
+    
+    if (!settings.templates) {
+      return null;
+    }
+    
+    const templateIndex = settings.templates.findIndex(t => t.id === templateId);
+    if (templateIndex === -1) {
+      return null;
+    }
+    
+    settings.templates[templateIndex].name = name || settings.templates[templateIndex].name;
+    if (searchParams) {
+      settings.templates[templateIndex].params = searchParams;
+    }
+    settings.templates[templateIndex].updatedAt = new Date().toISOString();
+    
+    this.saveUserSettings(userId, settings);
+    return settings.templates[templateIndex];
+  }
+
+  deleteTemplate(userId, templateId) {
+    const settings = this.getUserSettings(userId);
+    
+    if (!settings.templates) {
+      return false;
+    }
+    
+    const initialLength = settings.templates.length;
+    settings.templates = settings.templates.filter(t => t.id !== templateId);
+    
+    if (settings.templates.length === initialLength) {
+      return false;
+    }
+    
+    this.saveUserSettings(userId, settings);
+    return true;
+  }
+
+  getTemplate(userId, templateId) {
+    const settings = this.getUserSettings(userId);
+    
+    if (!settings.templates) {
+      return null;
+    }
+    
+    return settings.templates.find(t => t.id === templateId) || null;
+  }
 }
 
 module.exports = new SettingsManager();

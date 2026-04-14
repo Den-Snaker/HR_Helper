@@ -514,4 +514,83 @@ router.post('/ai/analyze-resumes', checkAuth, async (req, res) => {
   }
 });
 
+// Templates API
+router.get('/templates', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const templates = settingsManager.getTemplates(userId);
+    res.json(templates);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/templates', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const { name, params } = req.body;
+    
+    if (!name || !params) {
+      return res.status(400).json({ error: 'Name and params are required' });
+    }
+    
+    const template = settingsManager.saveTemplate(userId, name, params);
+    res.json({ success: true, template });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.put('/templates/:id', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const templateId = req.params.id;
+    const { name, params } = req.body;
+    
+    const template = settingsManager.updateTemplate(userId, templateId, name, params);
+    
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    res.json({ success: true, template });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete('/templates/:id', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const templateId = req.params.id;
+    
+    const deleted = settingsManager.deleteTemplate(userId, templateId);
+    
+    if (!deleted) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.get('/templates/:id', checkAuth, async (req, res) => {
+  try {
+    const userId = getUserId();
+    const templateId = req.params.id;
+    
+    const template = settingsManager.getTemplate(userId, templateId);
+    
+    if (!template) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    res.json(template);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

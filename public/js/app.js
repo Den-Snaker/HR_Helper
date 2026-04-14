@@ -1633,4 +1633,315 @@ function renderAIResults(results) {
   resultsEl.innerHTML = html;
 }
 
+// ==================== Templates ====================
+
+function openTemplatesModal() {
+  const modal = document.getElementById('templatesModal');
+  const authRequired = document.getElementById('templatesAuthRequired');
+  const content = document.getElementById('templatesContent');
+  
+  if (!isAuthenticated) {
+    authRequired.style.display = 'block';
+    content.style.display = 'none';
+  } else {
+    authRequired.style.display = 'none';
+    content.style.display = 'block';
+    loadTemplates();
+  }
+  
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function closeTemplatesModal() {
+  const modal = document.getElementById('templatesModal');
+  modal.classList.remove('open');
+  setTimeout(() => modal.style.display = 'none', 300);
+}
+
+async function loadTemplates() {
+  const listEl = document.getElementById('templatesList');
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/templates`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to load templates');
+    }
+    
+    const templates = await response.json();
+    renderTemplatesList(templates);
+  } catch (error) {
+    listEl.innerHTML = `<p style="color: var(--error-text);">Ошибка загрузки шаблонов: ${error.message}</p>`;
+  }
+}
+
+function renderTemplatesList(templates) {
+  const listEl = document.getElementById('templatesList');
+  
+  if (!templates || templates.length === 0) {
+    listEl.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Нет сохранённых шаблонов</p>';
+    return;
+  }
+  
+  listEl.innerHTML = templates.map(t => `
+    <div class="template-item">
+      <div class="template-info" onclick="loadTemplate('${t.id}')">
+        <div class="template-name">${escapeHtml(t.name)}</div>
+        <div class="template-date">Сохранён: ${new Date(t.createdAt).toLocaleString('ru-RU')}</div>
+      </div>
+      <div class="template-actions">
+        <button class="btn btn-load" onclick="loadTemplate('${t.id}')" title="Загрузить">Загрузить</button>
+        <button class="btn btn-rename" onclick="openRenameTemplate('${t.id}', '${escapeHtml(t.name)}')" title="Переименовать">✏️</button>
+        <button class="btn btn-delete" onclick="deleteTemplate('${t.id}')" title="Удалить">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+async function saveTemplate() {
+  const nameInput = document.getElementById('templateName');
+  const name = nameInput.value.trim();
+  
+  if (!name) {
+    showErrors(['Введите название шаблона']);
+    return;
+  }
+  
+  // Собираем все параметры поиска
+  const params = collectAllSearchParams();
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/templates`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, params })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to save template');
+    }
+    
+    nameInput.value = '';
+    showSuccess('Шаблон сохранён');
+    loadTemplates();
+  } catch (error) {
+    showErrors(['Ошибка сохранения шаблона: ' + error.message]);
+  }
+}
+
+function collectAllSearchParams() {
+  return {
+    searchType: currentSearchType,
+    keywords: document.getElementById('keywords')?.value || '',
+    perPage: document.getElementById('perPage')?.value || '20',
+    
+    // Selected items
+    selectedAreas: selectedAreas.map(a => ({ id: a.id, name: a.name })),
+    selectedSchedules: selectedSchedules.map(s => ({ id: s.id, name: s.name })),
+    selectedExperiences: selectedExperiences.map(e => ({ id: e.id, name: e.name })),
+    selectedRoles: selectedRoles.map(r => ({ id: r.id, name: r.name })),
+    selectedIndustries: selectedIndustries.map(i => ({ id: i.id, name: i.name })),
+    
+    // Salary
+    salaryFrom: document.getElementById('salaryFrom')?.value || '',
+    salaryTo: document.getElementById('salaryTo')?.value || '',
+    currency: document.getElementById('currency')?.value || 'RUR',
+    
+    // Resume filters
+    ageFrom: document.getElementById('ageFrom')?.value || '',
+    ageTo: document.getElementById('ageTo')?.value || '',
+    gender: document.getElementById('gender')?.value || '',
+    education: document.getElementById('education')?.value || '',
+    orderBy: document.getElementById('orderBy')?.value || 'relevance',
+    requiredKeywords: document.getElementById('requiredKeywords')?.value || '',
+    notFromAgency: document.getElementById('notFromAgency')?.checked || false
+  };
+}
+
+async function loadTemplate(templateId) {
+  try {
+    const response = await fetch(`${API_BASE}/api/templates/${templateId}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to load template');
+    }
+    
+    const template = await response.json();
+    applyTemplate(template.params);
+    
+    closeTemplatesModal();
+    
+    // Переключаем тип поиска если нужно
+    if (template.params.searchType && template.params.searchType !== currentSearchType) {
+      if (template.params.searchType === 'resumes') {
+        handleResumeTabClick();
+      } else {
+        setSearchType('vacancies');
+      }
+    }
+    
+    showSuccess(`Шаблон "${template.name}" загружен`);
+  } catch (error) {
+    showErrors(['Ошибка загрузки шаблона: ' + error.message]);
+  }
+}
+
+function applyTemplate(params) {
+  // Восстанавливаем значения полей
+  if (params.keywords) {
+    document.getElementById('keywords').value = params.keywords;
+  }
+  if (params.perPage) {
+    document.getElementById('perPage').value = params.perPage;
+  }
+  
+  // Salary
+  if (params.salaryFrom) document.getElementById('salaryFrom').value = params.salaryFrom;
+  if (params.salaryTo) document.getElementById('salaryTo').value = params.salaryTo;
+  if (params.currency) document.getElementById('currency').value = params.currency;
+  
+  // Resume filters
+  if (params.ageFrom) document.getElementById('ageFrom').value = params.ageFrom;
+  if (params.ageTo) document.getElementById('ageTo').value = params.ageTo;
+  if (params.gender) document.getElementById('gender').value = params.gender;
+  if (params.education) document.getElementById('education').value = params.education;
+  if (params.orderBy) document.getElementById('orderBy').value = params.orderBy;
+  if (params.requiredKeywords) document.getElementById('requiredKeywords').value = params.requiredKeywords;
+  if (params.notFromAgency !== undefined) document.getElementById('notFromAgency').checked = params.notFromAgency;
+  
+  // Multi-selects
+  if (params.selectedAreas) {
+    selectedAreas = params.selectedAreas;
+    updateAreasUI();
+  }
+  if (params.selectedSchedules) {
+    selectedSchedules = params.selectedSchedules;
+    updateSchedulesUI();
+  }
+  if (params.selectedExperiences) {
+    selectedExperiences = params.selectedExperiences;
+    updateExperiencesUI();
+  }
+  if (params.selectedRoles) {
+    selectedRoles = params.selectedRoles;
+    updateRolesUI();
+  }
+  if (params.selectedIndustries) {
+    selectedIndustries = params.selectedIndustries;
+    updateIndustriesUI();
+  }
+}
+
+function updateAreasUI() {
+  const checkboxes = document.querySelectorAll('.area-item input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = selectedAreas.some(a => a.id === cb.value);
+  });
+  updateAreasHeaderText();
+}
+
+function updateSchedulesUI() {
+  const checkboxes = document.querySelectorAll('.schedule-item input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = selectedSchedules.some(s => s.id === cb.value);
+  });
+  updateSchedulesHeaderText();
+}
+
+function updateExperiencesUI() {
+  const checkboxes = document.querySelectorAll('.experience-item input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = selectedExperiences.some(e => e.id === cb.value);
+  });
+  updateExperiencesHeaderText();
+}
+
+function updateRolesUI() {
+  const checkboxes = document.querySelectorAll('.role-item input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = selectedRoles.some(r => r.id === cb.value);
+  });
+  updateRolesHeaderText();
+}
+
+function updateIndustriesUI() {
+  const checkboxes = document.querySelectorAll('.industry-item input[type="checkbox"]');
+  checkboxes.forEach(cb => {
+    cb.checked = selectedIndustries.some(i => i.id === cb.value);
+  });
+  updateIndustriesHeaderText();
+}
+
+function openRenameTemplate(templateId, currentName) {
+  const modal = document.getElementById('renameTemplateModal');
+  document.getElementById('renameTemplateId').value = templateId;
+  document.getElementById('renameTemplateName').value = currentName;
+  
+  modal.style.display = 'flex';
+  setTimeout(() => modal.classList.add('open'), 10);
+}
+
+function closeRenameTemplateModal() {
+  const modal = document.getElementById('renameTemplateModal');
+  modal.classList.remove('open');
+  setTimeout(() => modal.style.display = 'none', 300);
+}
+
+async function confirmRenameTemplate() {
+  const templateId = document.getElementById('renameTemplateId').value;
+  const newName = document.getElementById('renameTemplateName').value.trim();
+  
+  if (!newName) {
+    showErrors(['Введите название шаблона']);
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/templates/${templateId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: newName })
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to rename template');
+    }
+    
+    closeRenameTemplateModal();
+    loadTemplates();
+    showSuccess('Шаблон переименован');
+  } catch (error) {
+    showErrors(['Ошибка переименования: ' + error.message]);
+  }
+}
+
+async function deleteTemplate(templateId) {
+  if (!confirm('Удалить этот шаблон?')) {
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${API_BASE}/api/templates/${templateId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to delete template');
+    }
+    
+    loadTemplates();
+    showSuccess('Шаблон удалён');
+  } catch (error) {
+    showErrors(['Ошибка удаления: ' + error.message]);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', init);
