@@ -1065,18 +1065,6 @@ function getSearchParams() {
     }
     if (orderBy) params.append('order_by', orderBy);
     console.log('Search params for resumes:', params.toString());
-  }
-    if (selectedIndustries.length > 0) {
-      console.log('Adding employer_industry params:', selectedIndustries);
-      selectedIndustries.forEach(industry => {
-        params.append('employer_industry', industry.id);
-      });
-    } else {
-      console.log('No industries selected');
-    }
-    if (orderBy) params.append('order_by', orderBy);
-    if (notFromAgency) params.append('label', 'not_from_recruitment_agency');
-    console.log('Search params for resumes:', params.toString());
     console.log('Selected industries:', selectedIndustries);
     console.log('Selected experiences:', selectedExperiences);
   }
