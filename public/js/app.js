@@ -236,9 +236,7 @@ async function loadDictionaries() {
     }
     
     if (industriesRes.ok) {
-      const industriesData = await industriesRes.json();
-      console.log('Industries data:', industriesData);
-      dictionaries.industries = industriesData;
+      dictionaries.industries = await industriesRes.json();
       populateIndustries();
     } else {
       console.error('Failed to load industries:', industriesRes.status, industriesRes.statusText);
@@ -250,15 +248,9 @@ async function loadDictionaries() {
 
 function populateProfessionalRoles() {
   const roleList = document.getElementById('roleList');
-  if (!roleList) {
-    console.error('roleList element not found');
-    return;
-  }
+  if (!roleList) return; // Элемент скрыт при поиске вакансий
   
-  if (!dictionaries.professional_roles) {
-    console.error('professional_roles not loaded');
-    return;
-  }
+  if (!dictionaries.professional_roles) return;
   
   console.log('Populating roles, data:', dictionaries.professional_roles);
   
@@ -328,17 +320,9 @@ function populateProfessionalRoles() {
 
 function populateIndustries() {
   const industryList = document.getElementById('industryList');
-  if (!industryList) {
-    console.error('industryList element not found');
-    return;
-  }
+  if (!industryList) return; // Элемент скрыт при поиске вакансий
   
-  if (!dictionaries.industries) {
-    console.error('industries not loaded');
-    return;
-  }
-  
-  console.log('Populating industries, data:', dictionaries.industries);
+  if (!dictionaries.industries) return;
   
   industryList.innerHTML = '';
   
