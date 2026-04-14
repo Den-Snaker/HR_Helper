@@ -268,12 +268,12 @@ class AIService {
       });
     }
     
-    if (resume.skills && resume.skills.length > 0) {
-      parts.push(`\nКЛЮЧЕВЫЕ НАВЫКИ: ${resume.skills.join(', ')}`);
-    }
-    
-    if (resume.skill_set && resume.skill_set.length > 0) {
-      parts.push(`ДОПОЛНИТЕЛЬНЫЕ НАВЫКИ: ${resume.skill_set.join(', ')}`);
+    const skills = resume.skill_set || resume.skills || [];
+    if (skills.length > 0) {
+      const skillsText = skills.map(s => typeof s === 'string' ? s : (s.name || '')).filter(s => s).join(', ');
+      if (skillsText) {
+        parts.push(`\nКЛЮЧЕВЫЕ НАВЫКИ: ${skillsText}`);
+      }
     }
 
     return parts.join('\n');

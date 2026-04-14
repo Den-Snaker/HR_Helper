@@ -119,7 +119,8 @@ async function exportTop5Resumes(resumes) {
       ? `${resume.salary.from || ''}${resume.salary.to ? '-' + resume.salary.to : ''} ${resume.salary.currency || 'RUB'}`.trim()
       : 'Не указана';
     
-    const skills = resume.skill_set?.slice(0, 5).join(', ') || resume.skills?.slice(0, 5).join(', ') || '';
+    const skillsArr = resume.skill_set || resume.skills || [];
+    const skills = skillsArr.slice(0, 5).map(s => typeof s === 'string' ? s : (s.name || '')).filter(s => s).join(', ');
     
     summarySheet.addRow({
       index: index + 1,
@@ -202,9 +203,12 @@ async function exportTop5Resumes(resumes) {
     // Ключевые навыки
     const skills = resume.skill_set || resume.skills || [];
     if (skills.length > 0) {
-      sheet.addRow(['=== КЛЮЧЕВЫЕ НАВЫКИ ===']);
-      sheet.addRow([skills.join(', ')]);
-      sheet.addRow(['']);
+      const skillsText = skills.map(s => typeof s === 'string' ? s : (s.name || '')).filter(s => s).join(', ');
+      if (skillsText) {
+        sheet.addRow(['=== КЛЮЧЕВЫЕ НАВЫКИ ===']);
+        sheet.addRow([skillsText]);
+        sheet.addRow(['']);
+      }
     }
     
     // Дополнительная информация
